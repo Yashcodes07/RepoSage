@@ -1,0 +1,16 @@
+# virtual environment
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# ChromaDB local storage
+chroma_store/
+_tmp_repo/
+
+# BM25 pickle
+*.pkl
+
+# env secrets
+.env
