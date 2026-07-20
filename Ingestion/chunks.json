@@ -1037,29 +1037,11 @@
   {
     "file_path": "frontend/src/App.jsx",
     "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "s",
-    "start_line": 9,
-    "end_line": 9,
-    "code": "s => s.token"
-  },
-  {
-    "file_path": "frontend/src/App.jsx",
-    "language": "javascript",
     "node_type": "function_declaration",
     "name": "PublicRoute",
     "start_line": 14,
     "end_line": 17,
     "code": "function PublicRoute({ children }) {\n  const token = useAuthStore(s => s.token)\n  return token ? <Navigate to=\"/app\" replace /> : children\n}"
-  },
-  {
-    "file_path": "frontend/src/App.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "s",
-    "start_line": 15,
-    "end_line": 15,
-    "code": "s => s.token"
   },
   {
     "file_path": "frontend/src/App.jsx",
@@ -1082,15 +1064,6 @@
   {
     "file_path": "frontend/src/components/QueryInterface/SQLEditor.jsx",
     "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "s",
-    "start_line": 9,
-    "end_line": 9,
-    "code": "s => s.selectedConnection"
-  },
-  {
-    "file_path": "frontend/src/components/QueryInterface/SQLEditor.jsx",
-    "language": "javascript",
     "node_type": "function_declaration",
     "name": "runQuery",
     "start_line": 16,
@@ -1109,47 +1082,11 @@
   {
     "file_path": "frontend/src/components/QueryInterface/SQLEditor.jsx",
     "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 31,
-    "end_line": 31,
-    "code": "() => setCopied(false)"
-  },
-  {
-    "file_path": "frontend/src/components/QueryInterface/SQLEditor.jsx",
-    "language": "javascript",
     "node_type": "function_declaration",
     "name": "downloadCSV",
     "start_line": 34,
     "end_line": 44,
     "code": "function downloadCSV() {\n    if (!result) return\n    const header = result.columns.join(',')\n    const rows   = result.rows.map(r => r.map(v => `\"${v}\"`).join(','))\n    const csv    = [header, ...rows].join('\\n')\n    const blob   = new Blob([csv], { type: 'text/csv' })\n    const a      = document.createElement('a')\n    a.href = URL.createObjectURL(blob)\n    a.download = 'result.csv'\n    a.click()\n  }"
-  },
-  {
-    "file_path": "frontend/src/components/QueryInterface/SQLEditor.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "r",
-    "start_line": 37,
-    "end_line": 37,
-    "code": "r => r.map(v => `\"${v}\"`).join(',')"
-  },
-  {
-    "file_path": "frontend/src/components/QueryInterface/SQLEditor.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "v",
-    "start_line": 37,
-    "end_line": 37,
-    "code": "v => `\"${v}\"`"
-  },
-  {
-    "file_path": "frontend/src/components/QueryInterface/SQLEditor.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "v",
-    "start_line": 69,
-    "end_line": 69,
-    "code": "v => setSql(v || '')"
   },
   {
     "file_path": "frontend/src/components/QueryInterface/ChatBox.jsx",
@@ -1163,47 +1100,11 @@
   {
     "file_path": "frontend/src/components/QueryInterface/ChatBox.jsx",
     "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 27,
-    "end_line": 32,
-    "code": "(q, i) => (\n              <button key={i} onClick={() => msg.onFollowup(q)}\n                className=\"flex items-center gap-2 text-xs text-text-secondary hover:text-accent bg-bg-tertiary hover:bg-accent/5 border border-border hover:border-accent/30 px-3 py-1.5 rounded-lg transition-all w-full text-left\">\n                <ChevronRight size={10} className=\"shrink-0\" />{q}\n              </button>\n            )"
-  },
-  {
-    "file_path": "frontend/src/components/QueryInterface/ChatBox.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 28,
-    "end_line": 28,
-    "code": "() => msg.onFollowup(q)"
-  },
-  {
-    "file_path": "frontend/src/components/QueryInterface/ChatBox.jsx",
-    "language": "javascript",
     "node_type": "function_declaration",
     "name": "ChatBox",
     "start_line": 40,
     "end_line": 117,
     "code": "function ChatBox() {\n  const conn = useAppStore(s => s.selectedConnection)\n  const [messages, setMessages] = useState([\n    { id: 0, role: 'assistant', content: \"Ask me anything about your database in plain English. I'll convert it to SQL and explain the results.\" }\n  ])\n  const [input, setInput]     = useState('')\n  const [loading, setLoading] = useState(false)\n  const bottomRef = useRef(null)\n\n  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])\n\n  async function sendMessage(question) {\n    if (!question.trim() || !conn || loading) return\n    const q = question.trim()\n    setInput('')\n    setMessages(p => [...p, { id: Date.now(), role: 'user', content: q }])\n    setLoading(true)\n    try {\n      const { data } = await api.post('/query/ask', { connection_id: conn.id, question: q })\n      const followups = data.followup_questions || []\n      setMessages(p => [...p, {\n        id: Date.now() + 1, role: 'assistant',\n        content: data.success ? data.answer : `Error: ${data.error_explanation?.explanation || 'Something went wrong'}`,\n        followups, onFollowup: (fq) => sendMessage(fq),\n      }])\n    } catch {\n      setMessages(p => [...p, { id: Date.now() + 1, role: 'assistant', content: 'Failed to connect to server.' }])\n    } finally { setLoading(false) }\n  }\n\n  if (!conn) return (\n    <div className=\"flex flex-col items-center justify-center h-full text-center p-8\">\n      <Bot size={40} className=\"text-text-muted mb-3\" />\n      <p className=\"text-text-primary font-medium mb-1\">No connection selected</p>\n      <p className=\"text-text-secondary text-sm\">Select a connection from the sidebar</p>\n    </div>\n  )\n\n  return (\n    <div className=\"flex flex-col h-full\">\n      <div className=\"flex items-center gap-2 px-4 py-2 border-b border-border bg-bg-secondary\">\n        <div className=\"w-1.5 h-1.5 rounded-full bg-success animate-pulse-slow\" />\n        <span className=\"text-text-secondary text-xs\">Connected to <span className=\"text-text-primary font-medium\">{conn.name}</span></span>\n      </div>\n      <div className=\"flex-1 overflow-y-auto p-4 space-y-4\">\n        {messages.map(msg => <Message key={msg.id} msg={msg} />)}\n        {loading && (\n          <div className=\"flex gap-3 animate-fade-in\">\n            <div className=\"w-7 h-7 rounded-full bg-bg-tertiary border border-border flex items-center justify-center\">\n              <Bot size={12} className=\"text-text-secondary\" />\n            </div>\n            <div className=\"bg-bg-tertiary border border-border rounded-xl rounded-tl-sm px-4 py-3\">\n              <div className=\"flex gap-1\">\n                {[0,1,2].map(i => (\n                  <div key={i} className=\"w-1.5 h-1.5 bg-text-muted rounded-full animate-bounce\"\n                    style={{ animationDelay: `${i * 150}ms` }} />\n                ))}\n              </div>\n            </div>\n          </div>\n        )}\n        <div ref={bottomRef} />\n      </div>\n      <div className=\"p-4 border-t border-border\">\n        <div className=\"flex gap-2\">\n          <input className=\"input flex-1\" placeholder=\"How many users signed up this month?\"\n            value={input} onChange={e => setInput(e.target.value)}\n            onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendMessage(input)}\n            disabled={loading} />\n          <button onClick={() => sendMessage(input)} disabled={!input.trim() || loading} className=\"btn-primary px-3\">\n            {loading ? <Loader2 size={14} className=\"animate-spin\" /> : <Send size={14} />}\n          </button>\n        </div>\n        <p className=\"text-text-muted text-xs mt-2 px-1\">Press Enter to send</p>\n      </div>\n    </div>\n  )\n}"
-  },
-  {
-    "file_path": "frontend/src/components/QueryInterface/ChatBox.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "s",
-    "start_line": 41,
-    "end_line": 41,
-    "code": "s => s.selectedConnection"
-  },
-  {
-    "file_path": "frontend/src/components/QueryInterface/ChatBox.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 49,
-    "end_line": 49,
-    "code": "() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }"
   },
   {
     "file_path": "frontend/src/components/QueryInterface/ChatBox.jsx",
@@ -1218,82 +1119,10 @@
     "file_path": "frontend/src/components/QueryInterface/ChatBox.jsx",
     "language": "javascript",
     "node_type": "arrow_function",
-    "name": "p",
-    "start_line": 55,
-    "end_line": 55,
-    "code": "p => [...p, { id: Date.now(), role: 'user', content: q }]"
-  },
-  {
-    "file_path": "frontend/src/components/QueryInterface/ChatBox.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "p",
-    "start_line": 60,
-    "end_line": 64,
-    "code": "p => [...p, {\n        id: Date.now() + 1, role: 'assistant',\n        content: data.success ? data.answer : `Error: ${data.error_explanation?.explanation || 'Something went wrong'}`,\n        followups, onFollowup: (fq) => sendMessage(fq),\n      }]"
-  },
-  {
-    "file_path": "frontend/src/components/QueryInterface/ChatBox.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
+    "name": "onFollowup",
     "start_line": 63,
     "end_line": 63,
     "code": "(fq) => sendMessage(fq)"
-  },
-  {
-    "file_path": "frontend/src/components/QueryInterface/ChatBox.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "p",
-    "start_line": 66,
-    "end_line": 66,
-    "code": "p => [...p, { id: Date.now() + 1, role: 'assistant', content: 'Failed to connect to server.' }]"
-  },
-  {
-    "file_path": "frontend/src/components/QueryInterface/ChatBox.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "msg",
-    "start_line": 85,
-    "end_line": 85,
-    "code": "msg => <Message key={msg.id} msg={msg} />"
-  },
-  {
-    "file_path": "frontend/src/components/QueryInterface/ChatBox.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "i",
-    "start_line": 93,
-    "end_line": 96,
-    "code": "i => (\n                  <div key={i} className=\"w-1.5 h-1.5 bg-text-muted rounded-full animate-bounce\"\n                    style={{ animationDelay: `${i * 150}ms` }} />\n                )"
-  },
-  {
-    "file_path": "frontend/src/components/QueryInterface/ChatBox.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "e",
-    "start_line": 106,
-    "end_line": 106,
-    "code": "e => setInput(e.target.value)"
-  },
-  {
-    "file_path": "frontend/src/components/QueryInterface/ChatBox.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "e",
-    "start_line": 107,
-    "end_line": 107,
-    "code": "e => e.key === 'Enter' && !e.shiftKey && sendMessage(input)"
-  },
-  {
-    "file_path": "frontend/src/components/QueryInterface/ChatBox.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 109,
-    "end_line": 109,
-    "code": "() => sendMessage(input)"
   },
   {
     "file_path": "frontend/src/components/QueryInterface/ResultsTable.jsx",
@@ -1305,33 +1134,6 @@
     "code": "function ResultsTable({ columns, rows }) {\n  if (!columns?.length) return null\n  return (\n    <div className=\"overflow-auto animate-fade-in\">\n      <table className=\"w-full text-xs\">\n        <thead className=\"sticky top-0 bg-bg-secondary border-b border-border\">\n          <tr>\n            {columns.map(col => (\n              <th key={col} className=\"text-left px-4 py-2 text-text-muted font-medium whitespace-nowrap\">{col}</th>\n            ))}\n          </tr>\n        </thead>\n        <tbody>\n          {rows.map((row, i) => (\n            <tr key={i} className={i % 2 === 0 ? '' : 'bg-bg-secondary/40'}>\n              {row.map((cell, j) => (\n                <td key={j} className=\"px-4 py-2 text-text-secondary whitespace-nowrap border-b border-border/30 font-mono\">\n                  {cell === null || cell === undefined\n                    ? <span className=\"text-text-muted italic\">null</span>\n                    : String(cell)}\n                </td>\n              ))}\n            </tr>\n          ))}\n        </tbody>\n      </table>\n    </div>\n  )\n}"
   },
   {
-    "file_path": "frontend/src/components/QueryInterface/ResultsTable.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "col",
-    "start_line": 8,
-    "end_line": 10,
-    "code": "col => (\n              <th key={col} className=\"text-left px-4 py-2 text-text-muted font-medium whitespace-nowrap\">{col}</th>\n            )"
-  },
-  {
-    "file_path": "frontend/src/components/QueryInterface/ResultsTable.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 14,
-    "end_line": 24,
-    "code": "(row, i) => (\n            <tr key={i} className={i % 2 === 0 ? '' : 'bg-bg-secondary/40'}>\n              {row.map((cell, j) => (\n                <td key={j} className=\"px-4 py-2 text-text-secondary whitespace-nowrap border-b border-border/30 font-mono\">\n                  {cell === null || cell === undefined\n                    ? <span className=\"text-text-muted italic\">null</span>\n                    : String(cell)}\n                </td>\n              ))}\n            </tr>\n          )"
-  },
-  {
-    "file_path": "frontend/src/components/QueryInterface/ResultsTable.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 16,
-    "end_line": 22,
-    "code": "(cell, j) => (\n                <td key={j} className=\"px-4 py-2 text-text-secondary whitespace-nowrap border-b border-border/30 font-mono\">\n                  {cell === null || cell === undefined\n                    ? <span className=\"text-text-muted italic\">null</span>\n                    : String(cell)}\n                </td>\n              )"
-  },
-  {
     "file_path": "frontend/src/components/Layout/TabBar.jsx",
     "language": "javascript",
     "node_type": "function_declaration",
@@ -1339,24 +1141,6 @@
     "start_line": 12,
     "end_line": 30,
     "code": "function TabBar() {\n  const { activeTab, setActiveTab } = useAppStore()\n  return (\n    <div className=\"flex items-center gap-1 px-4 border-b border-border bg-bg-secondary\">\n      {TABS.map(tab => (\n        <button key={tab.id} onClick={() => setActiveTab(tab.id)}\n          className={clsx(\n            \"flex items-center gap-1.5 px-3 py-3 text-sm font-medium border-b-2 transition-all duration-150 -mb-px\",\n            activeTab === tab.id\n              ? \"border-accent text-text-primary\"\n              : \"border-transparent text-text-muted hover:text-text-secondary hover:border-border\"\n          )}>\n          <tab.icon size={13} />\n          {tab.label}\n        </button>\n      ))}\n    </div>\n  )\n}"
-  },
-  {
-    "file_path": "frontend/src/components/Layout/TabBar.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "tab",
-    "start_line": 16,
-    "end_line": 27,
-    "code": "tab => (\n        <button key={tab.id} onClick={() => setActiveTab(tab.id)}\n          className={clsx(\n            \"flex items-center gap-1.5 px-3 py-3 text-sm font-medium border-b-2 transition-all duration-150 -mb-px\",\n            activeTab === tab.id\n              ? \"border-accent text-text-primary\"\n              : \"border-transparent text-text-muted hover:text-text-secondary hover:border-border\"\n          )}>\n          <tab.icon size={13} />\n          {tab.label}\n        </button>\n      )"
-  },
-  {
-    "file_path": "frontend/src/components/Layout/TabBar.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 17,
-    "end_line": 17,
-    "code": "() => setActiveTab(tab.id)"
   },
   {
     "file_path": "frontend/src/components/Layout/Sidebar.jsx",
@@ -1371,55 +1155,10 @@
     "file_path": "frontend/src/components/Layout/Sidebar.jsx",
     "language": "javascript",
     "node_type": "arrow_function",
-    "name": "s",
-    "start_line": 9,
-    "end_line": 9,
-    "code": "s => s.logout"
-  },
-  {
-    "file_path": "frontend/src/components/Layout/Sidebar.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "s",
-    "start_line": 10,
-    "end_line": 10,
-    "code": "s => s.user"
-  },
-  {
-    "file_path": "frontend/src/components/Layout/Sidebar.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
+    "name": "queryFn",
     "start_line": 15,
     "end_line": 15,
     "code": "() => api.get('/connections/').then(r => r.data)"
-  },
-  {
-    "file_path": "frontend/src/components/Layout/Sidebar.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "r",
-    "start_line": 15,
-    "end_line": 15,
-    "code": "r => r.data"
-  },
-  {
-    "file_path": "frontend/src/components/Layout/Sidebar.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "conn",
-    "start_line": 47,
-    "end_line": 63,
-    "code": "conn => (\n              <button key={conn.id} onClick={() => setSelectedConnection(conn)}\n                className={clsx(\n                  \"w-full text-left px-3 py-2 rounded-lg transition-all duration-150 group flex items-center gap-2\",\n                  selectedConnection?.id === conn.id\n                    ? \"bg-accent/10 border border-accent/20 text-text-primary\"\n                    : \"hover:bg-bg-hover text-text-secondary hover:text-text-primary border border-transparent\"\n                )}>\n                <div className={clsx(\"w-1.5 h-1.5 rounded-full shrink-0\",\n                  selectedConnection?.id === conn.id ? \"bg-accent\" : \"bg-text-muted\")} />\n                <div className=\"flex-1 min-w-0\">\n                  <p className=\"text-sm font-medium truncate\">{conn.name}</p>\n                  <p className=\"text-xs text-text-muted truncate\">{conn.db_type} \u00b7 {conn.database}</p>\n                </div>\n                <ChevronRight size={12} className=\"shrink-0 opacity-0 group-hover:opacity-100\" />\n              </button>\n            )"
-  },
-  {
-    "file_path": "frontend/src/components/Layout/Sidebar.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 48,
-    "end_line": 48,
-    "code": "() => setSelectedConnection(conn)"
   },
   {
     "file_path": "frontend/src/components/KnowledgeBase/KBPanel.jsx",
@@ -1434,16 +1173,7 @@
     "file_path": "frontend/src/components/KnowledgeBase/KBPanel.jsx",
     "language": "javascript",
     "node_type": "arrow_function",
-    "name": "s",
-    "start_line": 8,
-    "end_line": 8,
-    "code": "s => s.selectedConnection"
-  },
-  {
-    "file_path": "frontend/src/components/KnowledgeBase/KBPanel.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
+    "name": "queryFn",
     "start_line": 18,
     "end_line": 18,
     "code": "() => api.get(`/knowledge/status/${conn.id}`).then(r => r.data)"
@@ -1452,16 +1182,7 @@
     "file_path": "frontend/src/components/KnowledgeBase/KBPanel.jsx",
     "language": "javascript",
     "node_type": "arrow_function",
-    "name": "r",
-    "start_line": 18,
-    "end_line": 18,
-    "code": "r => r.data"
-  },
-  {
-    "file_path": "frontend/src/components/KnowledgeBase/KBPanel.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
+    "name": "mutationFn",
     "start_line": 23,
     "end_line": 23,
     "code": "() => api.post(`/knowledge/ingest/${conn.id}`)"
@@ -1470,7 +1191,7 @@
     "file_path": "frontend/src/components/KnowledgeBase/KBPanel.jsx",
     "language": "javascript",
     "node_type": "arrow_function",
-    "name": "",
+    "name": "onSuccess",
     "start_line": 24,
     "end_line": 24,
     "code": "() => qc.invalidateQueries({ queryKey: ['kb-status', conn?.id] })"
@@ -1494,60 +1215,6 @@
     "code": "async function handleHybrid() {\n    if (!hybridQ.trim() || !conn) return\n    setHybridLoading(true); setHybridResult(null)\n    try {\n      const { data } = await api.post('/knowledge/ask', { connection_id: conn.id, question: hybridQ })\n      setHybridResult(data)\n    } finally { setHybridLoading(false) }\n  }"
   },
   {
-    "file_path": "frontend/src/components/KnowledgeBase/KBPanel.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 62,
-    "end_line": 62,
-    "code": "() => ingestMutation.mutate()"
-  },
-  {
-    "file_path": "frontend/src/components/KnowledgeBase/KBPanel.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "e",
-    "start_line": 81,
-    "end_line": 81,
-    "code": "e => setSearchQuery(e.target.value)"
-  },
-  {
-    "file_path": "frontend/src/components/KnowledgeBase/KBPanel.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "e",
-    "start_line": 82,
-    "end_line": 82,
-    "code": "e => e.key === 'Enter' && handleSearch()"
-  },
-  {
-    "file_path": "frontend/src/components/KnowledgeBase/KBPanel.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 85,
-    "end_line": 93,
-    "code": "(r, i) => (\n          <div key={i} className=\"bg-bg-tertiary border border-border rounded-lg px-3 py-2 mb-2\">\n            <div className=\"flex items-center justify-between mb-1\">\n              <span className=\"text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20\">{r.metadata?.type}</span>\n              <span className=\"text-text-muted text-xs\">{(r.similarity * 100).toFixed(0)}% match</span>\n            </div>\n            <p className=\"text-text-secondary text-xs leading-relaxed\">{r.text}</p>\n          </div>\n        )"
-  },
-  {
-    "file_path": "frontend/src/components/KnowledgeBase/KBPanel.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "e",
-    "start_line": 104,
-    "end_line": 104,
-    "code": "e => setHybridQ(e.target.value)"
-  },
-  {
-    "file_path": "frontend/src/components/KnowledgeBase/KBPanel.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "e",
-    "start_line": 105,
-    "end_line": 105,
-    "code": "e => e.key === 'Enter' && handleHybrid()"
-  },
-  {
     "file_path": "frontend/src/components/ConnectionManager/AddConnectionModal.jsx",
     "language": "javascript",
     "node_type": "function_declaration",
@@ -1555,15 +1222,6 @@
     "start_line": 9,
     "end_line": 136,
     "code": "function AddConnectionModal({ onClose }) {\n  const qc = useQueryClient()\n  const setSelectedConnection = useAppStore(s => s.setSelectedConnection)\n  const [form, setForm] = useState({ name: '', db_type: 'postgresql', host: 'localhost', port: 5432, database: '', username: '', password: '' })\n  const [loading, setLoading]     = useState(false)\n  const [testing, setTesting]     = useState(false)\n  const [testResult, setTestResult] = useState(null)\n  const [error, setError]         = useState('')\n\n  const isFile = ['sqlite', 'csv'].includes(form.db_type)\n\n  async function handleTest() {\n    setTesting(true); setTestResult(null)\n    try {\n      const { data: conn } = await api.post('/connections/', form)\n      const { data: result } = await api.get(`/query/test/${conn.id}`)\n      setTestResult(result)\n      await api.delete(`/connections/${conn.id}`)\n    } catch (e) {\n      setTestResult({ success: false, error: e.response?.data?.detail || 'Test failed' })\n    } finally { setTesting(false) }\n  }\n\n  async function handleSave(e) {\n    e.preventDefault()\n    setLoading(true); setError('')\n    try {\n      const { data: conn } = await api.post('/connections/', form)\n      try { await api.post(`/knowledge/ingest/${conn.id}`) } catch (_) {}\n      await qc.invalidateQueries({ queryKey: ['connections'] })\n      setSelectedConnection(conn)\n      onClose()\n    } catch (err) {\n      setError(err.response?.data?.detail || 'Failed to save')\n    } finally { setLoading(false) }\n  }\n\n  return (\n    <div className=\"fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in\">\n      <div className=\"bg-bg-card border border-border rounded-xl w-full max-w-md animate-slide-up\">\n        <div className=\"flex items-center justify-between p-4 border-b border-border\">\n          <div className=\"flex items-center gap-2\">\n            <Database size={16} className=\"text-accent\" />\n            <h2 className=\"font-semibold text-text-primary\">Add Connection</h2>\n          </div>\n          <button onClick={onClose} className=\"text-text-muted hover:text-text-primary\"><X size={16} /></button>\n        </div>\n\n        <form onSubmit={handleSave} className=\"p-4 space-y-3\">\n          {error && <div className=\"bg-error/10 border border-error/30 text-error text-sm rounded-lg px-3 py-2\">{error}</div>}\n\n          <div>\n            <label className=\"label\">Connection Name</label>\n            <input className=\"input\" placeholder=\"My Local DB\" value={form.name}\n              onChange={e => setForm(p => ({ ...p, name: e.target.value }))} required />\n          </div>\n          <div>\n            <label className=\"label\">Database Type</label>\n            <select className=\"input\" value={form.db_type}\n              onChange={e => setForm(p => ({ ...p, db_type: e.target.value }))}>\n              {DB_TYPES.map(t => <option key={t} value={t}>{t.toUpperCase()}</option>)}\n            </select>\n          </div>\n\n          {isFile ? (\n            <div>\n              <label className=\"label\">{form.db_type === 'sqlite' ? 'Database File Path' : 'CSV File Path'}</label>\n              <input className=\"input font-mono text-xs\" placeholder=\"/path/to/file\"\n                value={form.database} onChange={e => setForm(p => ({ ...p, database: e.target.value }))} required />\n            </div>\n          ) : (\n            <>\n              <div className=\"grid grid-cols-2 gap-3\">\n                <div>\n                  <label className=\"label\">Host</label>\n                  <input className=\"input\" placeholder=\"localhost\" value={form.host}\n                    onChange={e => setForm(p => ({ ...p, host: e.target.value }))} />\n                </div>\n                <div>\n                  <label className=\"label\">Port</label>\n                  <input className=\"input\" type=\"number\" value={form.port}\n                    onChange={e => setForm(p => ({ ...p, port: +e.target.value }))} />\n                </div>\n              </div>\n              <div className=\"grid grid-cols-2 gap-3\">\n                <div>\n                  <label className=\"label\">Database</label>\n                  <input className=\"input\" placeholder=\"mydb\" value={form.database}\n                    onChange={e => setForm(p => ({ ...p, database: e.target.value }))} required />\n                </div>\n                <div>\n                  <label className=\"label\">Username</label>\n                  <input className=\"input\" placeholder=\"postgres\" value={form.username}\n                    onChange={e => setForm(p => ({ ...p, username: e.target.value }))} />\n                </div>\n              </div>\n              <div>\n                <label className=\"label\">Password</label>\n                <input className=\"input\" type=\"password\" placeholder=\"(leave blank if none)\" value={form.password}\n                  onChange={e => setForm(p => ({ ...p, password: e.target.value }))} />\n              </div>\n            </>\n          )}\n\n          {testResult && (\n            <div className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg border ${\n              testResult.success ? 'bg-success/10 border-success/30 text-success' : 'bg-error/10 border-error/30 text-error'\n            }`}>\n              {testResult.success ? <CheckCircle size={13} /> : <AlertCircle size={13} />}\n              {testResult.success ? 'Connection successful!' : testResult.error}\n            </div>\n          )}\n\n          <div className=\"flex gap-2 pt-1\">\n            <button type=\"button\" onClick={handleTest} disabled={testing} className=\"btn-secondary flex-1 justify-center\">\n              {testing && <Loader2 size={13} className=\"animate-spin\" />}\n              {testing ? 'Testing...' : 'Test'}\n            </button>\n            <button type=\"submit\" disabled={loading} className=\"btn-primary flex-1 justify-center\">\n              {loading && <Loader2 size={13} className=\"animate-spin\" />}\n              {loading ? 'Saving...' : 'Save Connection'}\n            </button>\n          </div>\n        </form>\n      </div>\n    </div>\n  )\n}"
-  },
-  {
-    "file_path": "frontend/src/components/ConnectionManager/AddConnectionModal.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "s",
-    "start_line": 11,
-    "end_line": 11,
-    "code": "s => s.setSelectedConnection"
   },
   {
     "file_path": "frontend/src/components/ConnectionManager/AddConnectionModal.jsx",
@@ -1582,159 +1240,6 @@
     "start_line": 32,
     "end_line": 44,
     "code": "async function handleSave(e) {\n    e.preventDefault()\n    setLoading(true); setError('')\n    try {\n      const { data: conn } = await api.post('/connections/', form)\n      try { await api.post(`/knowledge/ingest/${conn.id}`) } catch (_) {}\n      await qc.invalidateQueries({ queryKey: ['connections'] })\n      setSelectedConnection(conn)\n      onClose()\n    } catch (err) {\n      setError(err.response?.data?.detail || 'Failed to save')\n    } finally { setLoading(false) }\n  }"
-  },
-  {
-    "file_path": "frontend/src/components/ConnectionManager/AddConnectionModal.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "e",
-    "start_line": 63,
-    "end_line": 63,
-    "code": "e => setForm(p => ({ ...p, name: e.target.value }))"
-  },
-  {
-    "file_path": "frontend/src/components/ConnectionManager/AddConnectionModal.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "p",
-    "start_line": 63,
-    "end_line": 63,
-    "code": "p => ({ ...p, name: e.target.value })"
-  },
-  {
-    "file_path": "frontend/src/components/ConnectionManager/AddConnectionModal.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "e",
-    "start_line": 68,
-    "end_line": 68,
-    "code": "e => setForm(p => ({ ...p, db_type: e.target.value }))"
-  },
-  {
-    "file_path": "frontend/src/components/ConnectionManager/AddConnectionModal.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "p",
-    "start_line": 68,
-    "end_line": 68,
-    "code": "p => ({ ...p, db_type: e.target.value })"
-  },
-  {
-    "file_path": "frontend/src/components/ConnectionManager/AddConnectionModal.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "t",
-    "start_line": 69,
-    "end_line": 69,
-    "code": "t => <option key={t} value={t}>{t.toUpperCase()}</option>"
-  },
-  {
-    "file_path": "frontend/src/components/ConnectionManager/AddConnectionModal.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "e",
-    "start_line": 77,
-    "end_line": 77,
-    "code": "e => setForm(p => ({ ...p, database: e.target.value }))"
-  },
-  {
-    "file_path": "frontend/src/components/ConnectionManager/AddConnectionModal.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "p",
-    "start_line": 77,
-    "end_line": 77,
-    "code": "p => ({ ...p, database: e.target.value })"
-  },
-  {
-    "file_path": "frontend/src/components/ConnectionManager/AddConnectionModal.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "e",
-    "start_line": 85,
-    "end_line": 85,
-    "code": "e => setForm(p => ({ ...p, host: e.target.value }))"
-  },
-  {
-    "file_path": "frontend/src/components/ConnectionManager/AddConnectionModal.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "p",
-    "start_line": 85,
-    "end_line": 85,
-    "code": "p => ({ ...p, host: e.target.value })"
-  },
-  {
-    "file_path": "frontend/src/components/ConnectionManager/AddConnectionModal.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "e",
-    "start_line": 90,
-    "end_line": 90,
-    "code": "e => setForm(p => ({ ...p, port: +e.target.value }))"
-  },
-  {
-    "file_path": "frontend/src/components/ConnectionManager/AddConnectionModal.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "p",
-    "start_line": 90,
-    "end_line": 90,
-    "code": "p => ({ ...p, port: +e.target.value })"
-  },
-  {
-    "file_path": "frontend/src/components/ConnectionManager/AddConnectionModal.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "e",
-    "start_line": 97,
-    "end_line": 97,
-    "code": "e => setForm(p => ({ ...p, database: e.target.value }))"
-  },
-  {
-    "file_path": "frontend/src/components/ConnectionManager/AddConnectionModal.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "p",
-    "start_line": 97,
-    "end_line": 97,
-    "code": "p => ({ ...p, database: e.target.value })"
-  },
-  {
-    "file_path": "frontend/src/components/ConnectionManager/AddConnectionModal.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "e",
-    "start_line": 102,
-    "end_line": 102,
-    "code": "e => setForm(p => ({ ...p, username: e.target.value }))"
-  },
-  {
-    "file_path": "frontend/src/components/ConnectionManager/AddConnectionModal.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "p",
-    "start_line": 102,
-    "end_line": 102,
-    "code": "p => ({ ...p, username: e.target.value })"
-  },
-  {
-    "file_path": "frontend/src/components/ConnectionManager/AddConnectionModal.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "e",
-    "start_line": 108,
-    "end_line": 108,
-    "code": "e => setForm(p => ({ ...p, password: e.target.value }))"
-  },
-  {
-    "file_path": "frontend/src/components/ConnectionManager/AddConnectionModal.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "p",
-    "start_line": 108,
-    "end_line": 108,
-    "code": "p => ({ ...p, password: e.target.value })"
   },
   {
     "file_path": "frontend/src/components/SchemaExplorer/SchemaTree.jsx",
@@ -1757,42 +1262,6 @@
   {
     "file_path": "frontend/src/components/SchemaExplorer/SchemaTree.jsx",
     "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 18,
-    "end_line": 18,
-    "code": "() => setOpen(p => !p)"
-  },
-  {
-    "file_path": "frontend/src/components/SchemaExplorer/SchemaTree.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "p",
-    "start_line": 18,
-    "end_line": 18,
-    "code": "p => !p"
-  },
-  {
-    "file_path": "frontend/src/components/SchemaExplorer/SchemaTree.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "col",
-    "start_line": 27,
-    "end_line": 34,
-    "code": "col => (\n            <div key={col.name} className=\"flex items-center gap-2 px-2 py-1 rounded hover:bg-bg-hover\">\n              {col.primary_key ? <Key size={10} className=\"text-warning shrink-0\" /> : <Hash size={10} className=\"text-text-muted shrink-0\" />}\n              <span className=\"text-text-secondary text-xs flex-1 truncate\">{col.name}</span>\n              <TypeBadge type={col.type} />\n              {!col.nullable && <span className=\"text-xs text-error\">*</span>}\n            </div>\n          )"
-  },
-  {
-    "file_path": "frontend/src/components/SchemaExplorer/SchemaTree.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 35,
-    "end_line": 40,
-    "code": "(fk, i) => (\n            <div key={i} className=\"flex items-center gap-2 px-2 py-1 text-xs text-text-muted\">\n              <Link size={10} className=\"shrink-0 text-purple-400\" />\n              <span className=\"truncate\">{fk.column?.join(', ')} \u2192 {fk.references_table}</span>\n            </div>\n          )"
-  },
-  {
-    "file_path": "frontend/src/components/SchemaExplorer/SchemaTree.jsx",
-    "language": "javascript",
     "node_type": "function_declaration",
     "name": "SchemaTree",
     "start_line": 47,
@@ -1803,82 +1272,19 @@
     "file_path": "frontend/src/components/SchemaExplorer/SchemaTree.jsx",
     "language": "javascript",
     "node_type": "arrow_function",
-    "name": "s",
-    "start_line": 48,
-    "end_line": 48,
-    "code": "s => s.selectedConnection"
-  },
-  {
-    "file_path": "frontend/src/components/SchemaExplorer/SchemaTree.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
+    "name": "queryFn",
     "start_line": 51,
     "end_line": 51,
     "code": "() => api.get(`/query/schema/${conn.id}`).then(r => r.data.schema)"
   },
   {
-    "file_path": "frontend/src/components/SchemaExplorer/SchemaTree.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "r",
-    "start_line": 51,
-    "end_line": 51,
-    "code": "r => r.data.schema"
-  },
-  {
-    "file_path": "frontend/src/components/SchemaExplorer/SchemaTree.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 64,
-    "end_line": 64,
-    "code": "(_, i) => <div key={i} className=\"h-8 w-full bg-bg-tertiary rounded animate-pulse\" />"
-  },
-  {
-    "file_path": "frontend/src/components/SchemaExplorer/SchemaTree.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 75,
-    "end_line": 75,
-    "code": "() => refetch()"
-  },
-  {
-    "file_path": "frontend/src/components/SchemaExplorer/SchemaTree.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 80,
-    "end_line": 82,
-    "code": "([name, info], i) => (\n          <TableRow key={name} name={name} info={info} defaultOpen={i === 0} />\n        )"
-  },
-  {
     "file_path": "frontend/src/api/client.js",
     "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "config",
-    "start_line": 14,
-    "end_line": 18,
-    "code": "config => {\n  const token = useAuthStore.getState().token\n  if (token) config.headers.Authorization = `Bearer ${token}`\n  return config\n}"
-  },
-  {
-    "file_path": "frontend/src/api/client.js",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "res",
-    "start_line": 22,
-    "end_line": 22,
-    "code": "res => res"
-  },
-  {
-    "file_path": "frontend/src/api/client.js",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "err",
-    "start_line": 23,
-    "end_line": 26,
-    "code": "err => {\n    if (err.response?.status === 401) useAuthStore.getState().logout()\n    return Promise.reject(err)\n  }"
+    "node_type": "whole_file",
+    "name": "client.js",
+    "start_line": 1,
+    "end_line": 29,
+    "code": "import axios from 'axios'\nimport { useAuthStore } from '../store/authStore'\n\n// \u2705 automatically appends /api to base URL\nconst BASE_URL = import.meta.env.VITE_API_URL \n  ? `${import.meta.env.VITE_API_URL}/api`\n  : 'http://localhost:8000/api'\n\nconst api = axios.create({\n  baseURL: BASE_URL,\n})\n\n// Attach JWT token to every request automatically\napi.interceptors.request.use(config => {\n  const token = useAuthStore.getState().token\n  if (token) config.headers.Authorization = `Bearer ${token}`\n  return config\n})\n\n// Auto logout on 401\napi.interceptors.response.use(\n  res => res,\n  err => {\n    if (err.response?.status === 401) useAuthStore.getState().logout()\n    return Promise.reject(err)\n  }\n)\n\nexport default api"
   },
   {
     "file_path": "frontend/src/pages/Landing.jsx",
@@ -1892,137 +1298,11 @@
   {
     "file_path": "frontend/src/pages/Landing.jsx",
     "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 9,
-    "end_line": 13,
-    "code": "() => {\n    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) setVisible(true) }, { threshold })\n    if (ref.current) obs.observe(ref.current)\n    return () => obs.disconnect()\n  }"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 10,
-    "end_line": 10,
-    "code": "([e]) => { if (e.isIntersecting) setVisible(true) }"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 12,
-    "end_line": 12,
-    "code": "() => obs.disconnect()"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
     "node_type": "function_declaration",
     "name": "Terminal_",
     "start_line": 30,
     "end_line": 76,
     "code": "function Terminal_() {\n  const [lines, setLines] = useState([])\n  const scrollRef = useRef(null)\n\n  useEffect(() => {\n    const timers = DEMO_LINES.map(({ delay, text, color }) =>\n      setTimeout(() => setLines(prev => [...prev, { text, color }]), delay)\n    )\n    const loop = setTimeout(() => setLines([]), 5800)\n    return () => { timers.forEach(clearTimeout); clearTimeout(loop) }\n  }, [lines.length === 0 ? 0 : undefined])\n\n  useEffect(() => {\n    if (lines.length === DEMO_LINES.length) {\n      const t = setTimeout(() => setLines([]), 2500)\n      return () => clearTimeout(t)\n    }\n  }, [lines.length])\n\n  useEffect(() => {\n    if (scrollRef.current)\n      scrollRef.current.scrollTop = scrollRef.current.scrollHeight\n  }, [lines])\n\n  return (\n    <div className=\"relative rounded-2xl overflow-hidden border border-white/10 bg-[#0d0d14] shadow-2xl shadow-indigo-950/60\">\n      <div className=\"flex items-center gap-2 px-4 py-3 bg-[#111118] border-b border-white/5\">\n        <span className=\"w-3 h-3 rounded-full bg-red-500/80\" />\n        <span className=\"w-3 h-3 rounded-full bg-yellow-500/80\" />\n        <span className=\"w-3 h-3 rounded-full bg-green-500/80\" />\n        <span className=\"ml-3 text-xs text-white/30 font-mono\">quedb \u2014 ai query engine</span>\n      </div>\n      <div\n        ref={scrollRef}\n        className=\"p-5 font-mono text-sm min-h-[260px] max-h-[260px] overflow-y-auto space-y-1.5\"\n        style={{ scrollbarWidth: 'none' }}\n      >\n        {lines.map((l, i) => (\n          <div key={i} style={{ color: l.color }} className=\"animate-fade-in leading-relaxed\">\n            {l.text}\n          </div>\n        ))}\n        <span className=\"inline-block w-2 h-4 bg-indigo-400 animate-pulse ml-0.5\" />\n      </div>\n    </div>\n  )\n}"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 34,
-    "end_line": 40,
-    "code": "() => {\n    const timers = DEMO_LINES.map(({ delay, text, color }) =>\n      setTimeout(() => setLines(prev => [...prev, { text, color }]), delay)\n    )\n    const loop = setTimeout(() => setLines([]), 5800)\n    return () => { timers.forEach(clearTimeout); clearTimeout(loop) }\n  }"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 35,
-    "end_line": 36,
-    "code": "({ delay, text, color }) =>\n      setTimeout(() => setLines(prev => [...prev, { text, color }]), delay)"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 36,
-    "end_line": 36,
-    "code": "() => setLines(prev => [...prev, { text, color }])"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "prev",
-    "start_line": 36,
-    "end_line": 36,
-    "code": "prev => [...prev, { text, color }]"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 38,
-    "end_line": 38,
-    "code": "() => setLines([])"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 39,
-    "end_line": 39,
-    "code": "() => { timers.forEach(clearTimeout); clearTimeout(loop) }"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 42,
-    "end_line": 47,
-    "code": "() => {\n    if (lines.length === DEMO_LINES.length) {\n      const t = setTimeout(() => setLines([]), 2500)\n      return () => clearTimeout(t)\n    }\n  }"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 44,
-    "end_line": 44,
-    "code": "() => setLines([])"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 45,
-    "end_line": 45,
-    "code": "() => clearTimeout(t)"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 49,
-    "end_line": 52,
-    "code": "() => {\n    if (scrollRef.current)\n      scrollRef.current.scrollTop = scrollRef.current.scrollHeight\n  }"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 67,
-    "end_line": 71,
-    "code": "(l, i) => (\n          <div key={i} style={{ color: l.color }} className=\"animate-fade-in leading-relaxed\">\n            {l.text}\n          </div>\n        )"
   },
   {
     "file_path": "frontend/src/pages/Landing.jsx",
@@ -2046,16 +1326,7 @@
     "file_path": "frontend/src/pages/Landing.jsx",
     "language": "javascript",
     "node_type": "arrow_function",
-    "name": "",
-    "start_line": 128,
-    "end_line": 143,
-    "code": "() => {\n    const onMove = (e) => {\n      if (!ref.current) return\n      const rect = ref.current.getBoundingClientRect()\n      const mx = rect.left + rect.width  * 0.5\n      const my = rect.top  + rect.height * 0.3\n      const dx = e.clientX - mx\n      const dy = e.clientY - my\n      const dist = Math.sqrt(dx * dx + dy * dy) || 1\n      const r = 3\n      setPupil({ x: (dx / dist) * Math.min(r, dist * 0.055), y: (dy / dist) * Math.min(r, dist * 0.055) })\n      setWaving(dist < 280)\n    }\n    window.addEventListener('mousemove', onMove)\n    return () => window.removeEventListener('mousemove', onMove)\n  }"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
+    "name": "onMove",
     "start_line": 129,
     "end_line": 140,
     "code": "(e) => {\n      if (!ref.current) return\n      const rect = ref.current.getBoundingClientRect()\n      const mx = rect.left + rect.width  * 0.5\n      const my = rect.top  + rect.height * 0.3\n      const dx = e.clientX - mx\n      const dy = e.clientY - my\n      const dist = Math.sqrt(dx * dx + dy * dy) || 1\n      const r = 3\n      setPupil({ x: (dx / dist) * Math.min(r, dist * 0.055), y: (dy / dist) * Math.min(r, dist * 0.055) })\n      setWaving(dist < 280)\n    }"
@@ -2064,25 +1335,7 @@
     "file_path": "frontend/src/pages/Landing.jsx",
     "language": "javascript",
     "node_type": "arrow_function",
-    "name": "",
-    "start_line": 142,
-    "end_line": 142,
-    "code": "() => window.removeEventListener('mousemove', onMove)"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 146,
-    "end_line": 154,
-    "code": "() => {\n    const loop = () => {\n      bobT.current += 0.028\n      setBob(Math.sin(bobT.current) * 5)\n      bobRaf.current = requestAnimationFrame(loop)\n    }\n    bobRaf.current = requestAnimationFrame(loop)\n    return () => cancelAnimationFrame(bobRaf.current)\n  }"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
+    "name": "loop",
     "start_line": 147,
     "end_line": 151,
     "code": "() => {\n      bobT.current += 0.028\n      setBob(Math.sin(bobT.current) * 5)\n      bobRaf.current = requestAnimationFrame(loop)\n    }"
@@ -2091,55 +1344,10 @@
     "file_path": "frontend/src/pages/Landing.jsx",
     "language": "javascript",
     "node_type": "arrow_function",
-    "name": "",
-    "start_line": 153,
-    "end_line": 153,
-    "code": "() => cancelAnimationFrame(bobRaf.current)"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 157,
-    "end_line": 166,
-    "code": "() => {\n    const go = () => {\n      const t = setTimeout(() => {\n        setBlink(true)\n        setTimeout(() => { setBlink(false); go() }, 120)\n      }, 2000 + Math.random() * 4000)\n      return t\n    }\n    const t = go(); return () => clearTimeout(t)\n  }"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
+    "name": "go",
     "start_line": 158,
     "end_line": 164,
     "code": "() => {\n      const t = setTimeout(() => {\n        setBlink(true)\n        setTimeout(() => { setBlink(false); go() }, 120)\n      }, 2000 + Math.random() * 4000)\n      return t\n    }"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 159,
-    "end_line": 162,
-    "code": "() => {\n        setBlink(true)\n        setTimeout(() => { setBlink(false); go() }, 120)\n      }"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 161,
-    "end_line": 161,
-    "code": "() => { setBlink(false); go() }"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 165,
-    "end_line": 165,
-    "code": "() => clearTimeout(t)"
   },
   {
     "file_path": "frontend/src/pages/Landing.jsx",
@@ -2154,118 +1362,10 @@
     "file_path": "frontend/src/pages/Landing.jsx",
     "language": "javascript",
     "node_type": "arrow_function",
-    "name": "",
-    "start_line": 270,
-    "end_line": 274,
-    "code": "() => {\n    const handler = () => setScrolled(window.scrollY > 24)\n    window.addEventListener('scroll', handler)\n    return () => window.removeEventListener('scroll', handler)\n  }"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
+    "name": "handler",
     "start_line": 271,
     "end_line": 271,
     "code": "() => setScrolled(window.scrollY > 24)"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 273,
-    "end_line": 273,
-    "code": "() => window.removeEventListener('scroll', handler)"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "l",
-    "start_line": 299,
-    "end_line": 302,
-    "code": "l => (\n              <a key={l} href={`#${l.toLowerCase().replace(/ /g, '-')}`}\n                className=\"hover:text-white transition-colors\">{l}</a>\n            )"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 315,
-    "end_line": 315,
-    "code": "() => setMenuOpen(p => !p)"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "p",
-    "start_line": 315,
-    "end_line": 315,
-    "code": "p => !p"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "l",
-    "start_line": 322,
-    "end_line": 325,
-    "code": "l => (\n              <a key={l} href={`#${l.toLowerCase().replace(/ /g, '-')}`}\n                className=\"text-white/60 hover:text-white\" onClick={() => setMenuOpen(false)}>{l}</a>\n            )"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 324,
-    "end_line": 324,
-    "code": "() => setMenuOpen(false)"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 327,
-    "end_line": 327,
-    "code": "() => setMenuOpen(false)"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 328,
-    "end_line": 328,
-    "code": "() => setMenuOpen(false)"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 387,
-    "end_line": 392,
-    "code": "([val, label]) => (\n            <div key={label} className=\"bg-[#0d0d16] px-6 py-5 text-center\">\n              <div className=\"text-2xl font-bold text-white mb-0.5\">{val}</div>\n              <div className=\"text-xs text-white/35\">{label}</div>\n            </div>\n          )"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 405,
-    "end_line": 415,
-    "code": "({ icon: Icon, title, desc }, i) => (\n              <div key={title}\n                className={`group bg-[#0d0d16] border border-white/5 hover:border-indigo-700/40 rounded-2xl p-6 transition-all duration-500 hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-950/40 ${featVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}\n                style={{ transitionDelay: `${i * 70}ms` }}>\n                <div className=\"w-10 h-10 rounded-xl bg-indigo-950/80 border border-indigo-800/30 flex items-center justify-center mb-4 group-hover:bg-indigo-900/60 transition-colors\">\n                  <Icon size={18} className=\"text-indigo-400\" />\n                </div>\n                <h3 className=\"font-semibold text-white mb-2\">{title}</h3>\n                <p className=\"text-sm text-white/40 leading-relaxed\">{desc}</p>\n              </div>\n            )"
-  },
-  {
-    "file_path": "frontend/src/pages/Landing.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 431,
-    "end_line": 443,
-    "code": "({ n, title, desc }, i) => (\n                <div key={n}\n                  className={`flex gap-6 items-start transition-all duration-500 ${howVisible ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-6'}`}\n                  style={{ transitionDelay: `${i * 100}ms` }}>\n                  <div className=\"flex-shrink-0 w-16 h-16 rounded-2xl bg-[#0d0d16] border border-white/8 flex items-center justify-center\">\n                    <span className=\"text-lg font-bold text-indigo-400\" style={{ fontFamily: 'DM Mono, monospace' }}>{n}</span>\n                  </div>\n                  <div className=\"pt-4\">\n                    <h3 className=\"font-semibold text-white mb-1\">{title}</h3>\n                    <p className=\"text-sm text-white/40 leading-relaxed\">{desc}</p>\n                  </div>\n                </div>\n              )"
   },
   {
     "file_path": "frontend/src/pages/Dashboard.jsx",
@@ -2289,37 +1389,10 @@
     "file_path": "frontend/src/pages/Dashboard.jsx",
     "language": "javascript",
     "node_type": "arrow_function",
-    "name": "",
+    "name": "renderPanel",
     "start_line": 31,
     "end_line": 40,
     "code": "() => {\n    if (!selectedConnection) return <EmptyState onAdd={() => setShowAddModal(true)} />\n    switch (activeTab) {\n      case 'chat':      return <ChatBox />\n      case 'sql':       return <SQLEditor />\n      case 'schema':    return <SchemaTree />\n      case 'knowledge': return <KBPanel />\n      default:          return <ChatBox />\n    }\n  }"
-  },
-  {
-    "file_path": "frontend/src/pages/Dashboard.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 32,
-    "end_line": 32,
-    "code": "() => setShowAddModal(true)"
-  },
-  {
-    "file_path": "frontend/src/pages/Dashboard.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 44,
-    "end_line": 44,
-    "code": "() => setShowAddModal(true)"
-  },
-  {
-    "file_path": "frontend/src/pages/Dashboard.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 49,
-    "end_line": 49,
-    "code": "() => setShowAddModal(false)"
   },
   {
     "file_path": "frontend/src/pages/Login.jsx",
@@ -2333,74 +1406,11 @@
   {
     "file_path": "frontend/src/pages/Login.jsx",
     "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "s",
-    "start_line": 9,
-    "end_line": 9,
-    "code": "s => s.setAuth"
-  },
-  {
-    "file_path": "frontend/src/pages/Login.jsx",
-    "language": "javascript",
     "node_type": "function_declaration",
     "name": "handleSubmit",
     "start_line": 15,
     "end_line": 33,
     "code": "async function handleSubmit(e) {\n    e.preventDefault()\n    setLoading(true); setError('')\n    try {\n      const params = new URLSearchParams()\n      params.append('username', form.email)\n      params.append('password', form.password)\n      const { data } = await api.post('/auth/login', params, {\n        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }\n      })\n      const me = await api.get('/auth/me', {\n        headers: { Authorization: `Bearer ${data.access_token}` }\n      })\n      setAuth(data.access_token, me.data)\n      navigate('/')\n    } catch (err) {\n      setError(err.response?.data?.detail || 'Login failed')\n    } finally { setLoading(false) }\n  }"
-  },
-  {
-    "file_path": "frontend/src/pages/Login.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "e",
-    "start_line": 54,
-    "end_line": 54,
-    "code": "e => setForm(p => ({ ...p, email: e.target.value }))"
-  },
-  {
-    "file_path": "frontend/src/pages/Login.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "p",
-    "start_line": 54,
-    "end_line": 54,
-    "code": "p => ({ ...p, email: e.target.value })"
-  },
-  {
-    "file_path": "frontend/src/pages/Login.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "e",
-    "start_line": 60,
-    "end_line": 60,
-    "code": "e => setForm(p => ({ ...p, password: e.target.value }))"
-  },
-  {
-    "file_path": "frontend/src/pages/Login.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "p",
-    "start_line": 60,
-    "end_line": 60,
-    "code": "p => ({ ...p, password: e.target.value })"
-  },
-  {
-    "file_path": "frontend/src/pages/Login.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
-    "start_line": 61,
-    "end_line": 61,
-    "code": "() => setShowPw(p => !p)"
-  },
-  {
-    "file_path": "frontend/src/pages/Login.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "p",
-    "start_line": 61,
-    "end_line": 61,
-    "code": "p => !p"
   },
   {
     "file_path": "frontend/src/pages/Register.jsx",
@@ -2414,15 +1424,6 @@
   {
     "file_path": "frontend/src/pages/Register.jsx",
     "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "s",
-    "start_line": 9,
-    "end_line": 9,
-    "code": "s => s.setAuth"
-  },
-  {
-    "file_path": "frontend/src/pages/Register.jsx",
-    "language": "javascript",
     "node_type": "function_declaration",
     "name": "handleSubmit",
     "start_line": 14,
@@ -2430,73 +1431,10 @@
     "code": "async function handleSubmit(e) {\n    e.preventDefault()\n    setLoading(true); setError('')\n    try {\n      await api.post('/auth/register', form)\n      const params = new URLSearchParams()\n      params.append('username', form.email)\n      params.append('password', form.password)\n      const { data } = await api.post('/auth/login', params, {\n        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }\n      })\n      const me = await api.get('/auth/me', {\n        headers: { Authorization: `Bearer ${data.access_token}` }\n      })\n      setAuth(data.access_token, me.data)\n      navigate('/')\n    } catch (err) {\n      setError(err.response?.data?.detail || 'Registration failed')\n    } finally { setLoading(false) }\n  }"
   },
   {
-    "file_path": "frontend/src/pages/Register.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "e",
-    "start_line": 54,
-    "end_line": 54,
-    "code": "e => setForm(p => ({ ...p, full_name: e.target.value }))"
-  },
-  {
-    "file_path": "frontend/src/pages/Register.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "p",
-    "start_line": 54,
-    "end_line": 54,
-    "code": "p => ({ ...p, full_name: e.target.value })"
-  },
-  {
-    "file_path": "frontend/src/pages/Register.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "e",
-    "start_line": 59,
-    "end_line": 59,
-    "code": "e => setForm(p => ({ ...p, email: e.target.value }))"
-  },
-  {
-    "file_path": "frontend/src/pages/Register.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "p",
-    "start_line": 59,
-    "end_line": 59,
-    "code": "p => ({ ...p, email: e.target.value })"
-  },
-  {
-    "file_path": "frontend/src/pages/Register.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "e",
-    "start_line": 64,
-    "end_line": 64,
-    "code": "e => setForm(p => ({ ...p, password: e.target.value }))"
-  },
-  {
-    "file_path": "frontend/src/pages/Register.jsx",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "p",
-    "start_line": 64,
-    "end_line": 64,
-    "code": "p => ({ ...p, password: e.target.value })"
-  },
-  {
     "file_path": "frontend/src/store/authStore.js",
     "language": "javascript",
     "node_type": "arrow_function",
-    "name": "",
-    "start_line": 6,
-    "end_line": 11,
-    "code": "(set) => ({\n      token: null,\n      user: null,\n      setAuth: (token, user) => set({ token, user }),\n      logout: () => set({ token: null, user: null }),\n    })"
-  },
-  {
-    "file_path": "frontend/src/store/authStore.js",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
+    "name": "setAuth",
     "start_line": 9,
     "end_line": 9,
     "code": "(token, user) => set({ token, user })"
@@ -2505,7 +1443,7 @@
     "file_path": "frontend/src/store/authStore.js",
     "language": "javascript",
     "node_type": "arrow_function",
-    "name": "",
+    "name": "logout",
     "start_line": 10,
     "end_line": 10,
     "code": "() => set({ token: null, user: null })"
@@ -2514,16 +1452,7 @@
     "file_path": "frontend/src/store/appStore.js",
     "language": "javascript",
     "node_type": "arrow_function",
-    "name": "",
-    "start_line": 3,
-    "end_line": 8,
-    "code": "(set) => ({\n  selectedConnection: null,\n  setSelectedConnection: (conn) => set({ selectedConnection: conn }),\n  activeTab: 'chat',\n  setActiveTab: (tab) => set({ activeTab: tab }),\n})"
-  },
-  {
-    "file_path": "frontend/src/store/appStore.js",
-    "language": "javascript",
-    "node_type": "arrow_function",
-    "name": "",
+    "name": "setSelectedConnection",
     "start_line": 5,
     "end_line": 5,
     "code": "(conn) => set({ selectedConnection: conn })"
@@ -2532,7 +1461,7 @@
     "file_path": "frontend/src/store/appStore.js",
     "language": "javascript",
     "node_type": "arrow_function",
-    "name": "",
+    "name": "setActiveTab",
     "start_line": 7,
     "end_line": 7,
     "code": "(tab) => set({ activeTab: tab })"

@@ -60,6 +60,47 @@ def _extract_name(node, source_bytes: bytes) -> str:
     return ""
 
 
+def _decode(node, source_bytes: bytes) -> str:
+    return source_bytes[node.start_byte:node.end_byte].decode("utf-8", errors="ignore")
+
+
+def _resolve_arrow_function_name(node, source_bytes: bytes) -> str | None:
+    """
+    Arrow functions have no name of their own (`() => {}` has nothing to
+    extract via _extract_name) — their name, if any, lives on whatever
+    they're assigned to. Returns None if this is a genuinely anonymous
+    inline callback (e.g. a JSX prop or .then() argument) with nothing
+    meaningful to name it after — the caller should skip such chunks.
+    """
+    parent = node.parent
+    if parent is None:
+        return None
+
+    # const handleSubmit = () => {...}
+    if parent.type == "variable_declarator":
+        for child in parent.children:
+            if child.type == "identifier":
+                return _decode(child, source_bytes)
+
+    # this.handleSubmit = () => {...}  /  obj.prop = () => {...}
+    if parent.type == "assignment_expression":
+        left = parent.children[0] if parent.children else None
+        if left is not None:
+            return _decode(left, source_bytes)
+
+    # { onSubmit: () => {...} }  — object property / method shorthand
+    if parent.type == "pair":
+        for child in parent.children:
+            if child.type in ("property_identifier", "string"):
+                return _decode(child, source_bytes).strip("'\"")
+
+    # Anything else — JSX prop (onClick={() => ...}), array element,
+    # or a raw callback argument to another function (.then(x => ...))
+    # — this is an anonymous inline callback with no meaningful standalone
+    # name. Its code still lives inside whatever chunk contains it.
+    return None
+
+
 def chunk_file(file_path: str, language: str, source_code: str) -> list[CodeChunk]:
     """
     Parses source_code with the appropriate tree-sitter grammar and
@@ -74,22 +115,34 @@ def chunk_file(file_path: str, language: str, source_code: str) -> list[CodeChun
 
     def visit(node):
         if node.type in target_types:
-            start_line = node.start_point[0] + 1  # tree-sitter rows are 0-indexed
-            end_line = node.end_point[0] + 1
-            code_text = source_bytes[node.start_byte:node.end_byte].decode(
-                "utf-8", errors="ignore"
-            )
-            chunks.append(
-                CodeChunk(
-                    file_path=file_path,
-                    language=language,
-                    node_type=node.type,
-                    name=_extract_name(node, source_bytes),
-                    start_line=start_line,
-                    end_line=end_line,
-                    code=code_text,
+            name = None
+            skip_as_chunk = False
+
+            if node.type == "arrow_function":
+                name = _resolve_arrow_function_name(node, source_bytes)
+                if name is None:
+                    # Anonymous inline callback (JSX prop, .then() arg, etc.)
+                    # — not a meaningful standalone chunk. Its code is still
+                    # captured inside whichever enclosing chunk contains it.
+                    skip_as_chunk = True
+            else:
+                name = _extract_name(node, source_bytes)
+
+            if not skip_as_chunk:
+                start_line = node.start_point[0] + 1  # tree-sitter rows are 0-indexed
+                end_line = node.end_point[0] + 1
+                code_text = _decode(node, source_bytes)
+                chunks.append(
+                    CodeChunk(
+                        file_path=file_path,
+                        language=language,
+                        node_type=node.type,
+                        name=name or "",
+                        start_line=start_line,
+                        end_line=end_line,
+                        code=code_text,
+                    )
                 )
-            )
             # Don't recurse into this node's children for chunk purposes —
             # avoids double-counting e.g. a method inside a class as both
             # part of the class chunk AND its own chunk. We still want

@@ -17,7 +17,7 @@ import json
 import time
 from pathlib import Path
 
-from vector_index import get_client, get_collection, index_chunks
+from vector_index import get_client, get_collection, index_chunks, reset_collection
 from keyword_index import KeywordIndex
 
 
@@ -41,6 +41,7 @@ def main():
     # --- Vector index ---
     t0 = time.time()
     client = get_client(args.chroma_dir)
+    reset_collection(client)  # always a clean rebuild — see reset_collection() docstring
     collection = get_collection(client)
     index_chunks(collection, chunks)
     print(f"[build_index] Vector index built in {time.time() - t0:.1f}s "

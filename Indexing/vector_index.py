@@ -22,6 +22,19 @@ def get_client(persist_dir: str = "./chroma_store") -> chromadb.ClientAPI:
     return chromadb.PersistentClient(path=persist_dir)
 
 
+def reset_collection(client: chromadb.ClientAPI) -> None:
+    """
+    Deletes the collection if it exists. Call this before a full rebuild
+    so vectors from a previous chunk set (e.g. before a chunker fix
+    changed which chunks exist) don't linger alongside the new ones —
+    upsert only overwrites matching IDs, it never removes stale ones.
+    """
+    try:
+        client.delete_collection(COLLECTION_NAME)
+    except Exception:
+        pass  # collection didn't exist yet — nothing to reset
+
+
 def get_collection(client: chromadb.ClientAPI):
     embed_fn = embedding_functions.ONNXMiniLM_L6_V2()
     return client.get_or_create_collection(
@@ -86,7 +99,8 @@ def query_vector(collection, query_text: str, top_k: int = 10) -> list[dict]:
                 "start_line": meta["start_line"],
                 "end_line": meta["end_line"],
                 "name": meta["name"],
-                "code_preview": doc[:200],
+                "code": doc,             # full chunk text (name + code), for LLM context
+                "code_preview": doc[:200],  # short preview, for CLI/debug printing
                 "score": 1 - dist,  # cosine distance -> similarity
             }
         )
