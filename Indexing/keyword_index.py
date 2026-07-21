@@ -27,7 +27,8 @@ class BM25Entry:
     start_line: int
     end_line: int
     name: str
-    code_preview: str
+    code: str            # full chunk text, for LLM context
+    code_preview: str     # short preview, for CLI/debug printing
 
 
 def _tokenize(text: str) -> list[str]:
@@ -60,7 +61,12 @@ class KeywordIndex:
         corpus_tokens = []
         ids = generate_chunk_ids(chunks)
         for chunk_id, c in zip(ids, chunks):
-            text = f"{c.get('name', '')} {c['code']}"
+            # Include the file path alongside name+code. Without this, a
+            # query like "auth" can completely miss a chunk in auth.py if
+            # the word "auth" never appears as its own token in the code
+            # body — the filename itself is a real keyword signal BM25
+            # should get to use, not just an embedding-only signal.
+            text = f"{c['file_path']} {c.get('name', '')} {c['code']}"
             corpus_tokens.append(_tokenize(text))
             self.entries.append(
                 BM25Entry(
@@ -69,6 +75,7 @@ class KeywordIndex:
                     start_line=c["start_line"],
                     end_line=c["end_line"],
                     name=c.get("name", ""),
+                    code=c["code"],
                     code_preview=c["code"][:200],
                 )
             )
@@ -92,6 +99,7 @@ class KeywordIndex:
                 "start_line": entry.start_line,
                 "end_line": entry.end_line,
                 "name": entry.name,
+                "code": entry.code,
                 "code_preview": entry.code_preview,
                 "score": float(score),
             }
