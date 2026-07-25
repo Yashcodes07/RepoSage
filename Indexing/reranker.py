@@ -83,7 +83,12 @@ def rerank(query: str, candidates: list, top_n: int = 6) -> list[RerankedResult]
 
     model = _get_model()
 
-    pairs = [(query, c.code) for c in candidates]
+    # Give the model file_path + name, not just raw code. Bare code often
+    # lacks any natural-language signal a text-trained cross-encoder can
+    # latch onto (no "auth" if the function body never uses that word) —
+    # the file path and function name carry real information the model
+    # would otherwise never see. Same pattern that fixed BM25 in Phase 4.
+    pairs = [(query, f"{c.file_path}\n{c.name}\n{c.code}") for c in candidates]
     scores = model.predict(pairs)  # higher = more relevant
 
     scored = list(zip(candidates, scores))

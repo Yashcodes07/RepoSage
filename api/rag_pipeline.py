@@ -1,25 +1,41 @@
 """
-Phase 4 core: hybrid RAG loop.
+Phase 5 core: hybrid RAG loop with reranking.
 
-    question -> vector retrieval + BM25 retrieval -> RRF fusion -> build context -> Groq -> answer
+    question -> vector + BM25 retrieval -> RRF fusion (wide pool)
+             -> cross-encoder rerank (narrow down) -> build context -> Groq -> answer
 
-Upgraded from Phase 3's vector-only retrieval. See indexing/fusion.py
-for the fusion logic itself.
+Upgraded from Phase 4's fusion-only retrieval. See indexing/reranker.py
+for the reranking logic itself. Reranking can be disabled via the
+RERANK_ENABLED env var (falls back to fusion's own ranking) — useful
+if you're deploying somewhere too memory-constrained for the
+cross-encoder's torch dependency; see indexing/README.md.
 """
 
 import sys
 from pathlib import Path
 from dataclasses import dataclass
 
-from config import CHROMA_DIR, BM25_PATH, INDEXING_DIR, DEFAULT_TOP_K
+from config import (
+    CHROMA_DIR,
+    BM25_PATH,
+    INDEXING_DIR,
+    DEFAULT_TOP_K,
+    FUSION_CANDIDATE_POOL,
+    RERANK_ENABLED,
+)
 
 # indexing/ is a sibling folder, not a Python package — add it to the
-# path so we can import Phase 2/4's retrieval code directly instead of
-# duplicating it here.
+# path so we can import Phase 2/4/5's retrieval code directly instead
+# of duplicating it here.
 sys.path.insert(0, INDEXING_DIR)
 
-from fusion import hybrid_query  # noqa: E402
+from vector_index import get_client, get_collection, query_vector  # noqa: E402
+from keyword_index import KeywordIndex  # noqa: E402
+from fusion import reciprocal_rank_fusion  # noqa: E402
 from llm import generate_answer  # noqa: E402
+
+if RERANK_ENABLED:
+    from reranker import rerank  # noqa: E402
 
 
 @dataclass
@@ -73,10 +89,25 @@ def _extract_citations(chunks: list) -> list[Citation]:
 
 def answer_question(question: str, top_k: int = DEFAULT_TOP_K) -> RagAnswer:
     """
-    Runs the full Phase 4 loop for a single question: hybrid retrieval
-    (vector + BM25, fused via RRF) -> context -> Groq -> cited answer.
+    Runs the full Phase 5 loop for a single question: hybrid retrieval
+    (vector + BM25) -> RRF fusion over a wide candidate pool ->
+    cross-encoder rerank down to top_k -> context -> Groq -> cited answer.
     """
-    chunks = hybrid_query(CHROMA_DIR, BM25_PATH, question, top_n=top_k)
+    client = get_client(CHROMA_DIR)
+    collection = get_collection(client)
+    vector_results = query_vector(collection, question, top_k=FUSION_CANDIDATE_POOL)
+
+    kw_index = KeywordIndex()
+    kw_index.load(BM25_PATH)
+    keyword_results = kw_index.query(question, top_k=FUSION_CANDIDATE_POOL)
+
+    fused = reciprocal_rank_fusion(vector_results, keyword_results, top_n=FUSION_CANDIDATE_POOL)
+
+    if RERANK_ENABLED:
+        chunks = rerank(question, fused, top_n=top_k)
+    else:
+        chunks = fused[:top_k]
+
     context = build_context(chunks)
     answer_text = generate_answer(question, context)
 

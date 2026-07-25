@@ -24,3 +24,15 @@ BM25_PATH = str(_PROJECT_ROOT / "indexing" / "bm25_index.pkl")
 INDEXING_DIR = str(_PROJECT_ROOT / "indexing")
 
 DEFAULT_TOP_K = 6
+
+# Phase 5: reranking. Fusion pulls a wider candidate pool, the
+# cross-encoder narrows it down to DEFAULT_TOP_K for the LLM.
+#
+# Default is FALSE based on real evaluation (see indexing/README.md,
+# "Known issue" section): across 3 test queries on this codebase, the
+# cross-encoder (ms-marco-MiniLM-L-6-v2, trained on prose search, not
+# code) never beat fusion's own ranking, and actively demoted the
+# correct answer on both genuinely semantic queries tested. Set to
+# true only after you've validated it helps on YOUR queries.
+FUSION_CANDIDATE_POOL = 15
+RERANK_ENABLED = os.getenv("RERANK_ENABLED", "false").lower() == "true"
