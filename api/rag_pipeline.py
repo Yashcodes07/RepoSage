@@ -44,6 +44,7 @@ class Citation:
     start_line: int
     end_line: int
     name: str
+    code: str = ""
 
     def as_string(self) -> str:
         return f"{self.file_path}:{self.start_line}-{self.end_line}"
@@ -82,6 +83,7 @@ def _extract_citations(chunks: list) -> list[Citation]:
             start_line=c.start_line,
             end_line=c.end_line,
             name=c.name,
+            code=c.code,
         )
         for c in chunks
     ]
