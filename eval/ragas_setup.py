@@ -60,7 +60,15 @@ def get_ragas_llm():
             "GROQ_API_KEY is not set. Copy .env.example to .env in api/ "
             "and add your key (this eval harness reuses api/'s config)."
         )
-    client = AsyncOpenAI(api_key=GROQ_API_KEY, base_url=GROQ_OPENAI_COMPATIBLE_BASE_URL)
+    # max_retries here is on top of run_eval.py's RunConfig(max_workers=2),
+    # which already reduces how many of these fire concurrently. Raising
+    # max_retries gives extra headroom against Groq's free-tier per-minute
+    # token cap for RAGAS's own internal judge calls.
+    client = AsyncOpenAI(
+        api_key=GROQ_API_KEY,
+        base_url=GROQ_OPENAI_COMPATIBLE_BASE_URL,
+        max_retries=5,
+    )
     return llm_factory(GROQ_MODEL, client=client)
 
 
