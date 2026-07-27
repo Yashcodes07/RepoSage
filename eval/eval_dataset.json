@@ -10,11 +10,6 @@
     "reference": "The frontend stores the token and user object in a global auth store via the setAuth function in frontend/src/store/authStore.js. frontend/src/App.jsx's ProtectedRoute component checks for a token in that store to decide whether to render protected pages or redirect to login."
   },
   {
-    "id": "token-verification",
-    "question": "How does the backend verify a request is from an authenticated user?",
-    "reference": "get_current_user in app/core/security.py decodes the JWT from the request, extracts the email from the 'sub' claim, and loads the corresponding user from the database, raising an error if the token is invalid or the user doesn't exist."
-  },
-  {
     "id": "sql-agent-failure",
     "question": "What happens when the NL-to-SQL agent fails to answer a question?",
     "reference": "run_nl_query in app/ai/sql_agent.py catches exceptions from the agent and also checks if the response mentions an iteration or time limit, returning a structured dict with success=False and an error message rather than crashing."
@@ -25,44 +20,14 @@
     "reference": "run_hybrid_query in app/ai/hybrid_search.py runs a pipeline that first searches the knowledge base for schema context relevant to the question via _get_relevant_context, then builds a SQL agent with that context injected into its prompt."
   },
   {
-    "id": "connection-testing",
-    "question": "How is a database connection tested before use?",
-    "reference": "test_connection in app/handlers/base.py handles verifying that a given database connection configuration is valid and reachable."
-  },
-  {
-    "id": "http-401-handling",
-    "question": "What happens on the frontend when the API returns a 401 response?",
-    "reference": "The Axios interceptor in frontend/src/api/client.js logs the user out automatically when it receives a 401 response, in addition to attaching the auth token to outgoing requests."
-  },
-  {
-    "id": "sql-agent-construction",
-    "question": "How does the app build a SQL agent for a specific database connection?",
-    "reference": "build_sql_agent in app/ai/sql_agent.py constructs the agent using ChatGroq as the underlying LLM, built on top of the SQLDatabase object created by build_sql_database."
-  },
-  {
-    "id": "db-connection-type-handling",
-    "question": "How does the app construct a database connection URL for different database types?",
-    "reference": "build_sql_database in app/ai/sql_agent.py checks the db_type field of the connection config (e.g. 'postgresql') and builds the appropriate connection URL/driver for that database type."
-  },
-  {
     "id": "sql-error-explanation",
     "question": "How does the app explain a failed SQL query to the user in plain language?",
     "reference": "explain_sql_error in app/ai/error_explainer.py takes the original question, the failed SQL, and the error message, then uses ChatGroq to generate a plain-language explanation of what went wrong."
   },
   {
-    "id": "registration-flow",
-    "question": "What happens when a new user registers?",
-    "reference": "The register endpoint in app/api/routes/auth.py handles account creation on the backend. On the frontend, Register.jsx's handleSubmit posts the form data to /auth/register."
-  },
-  {
     "id": "direct-vs-nl-query",
     "question": "What's the difference between running a direct SQL query and asking a natural language question?",
     "reference": "run_sql in app/api/routes/query.py executes a raw SQL query directly against the database, while run_nl_query in app/ai/sql_agent.py takes a natural-language question and uses an LLM agent to generate and execute the corresponding SQL."
-  },
-  {
-    "id": "vector-store-search",
-    "question": "How does the knowledge base search for relevant documents?",
-    "reference": "search_documents in app/ai/vector_store.py handles querying the vector store to find documents relevant to a given query."
   },
   {
     "id": "connections-crud",

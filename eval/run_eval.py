@@ -54,6 +54,45 @@ INTER_QUESTION_SLEEP_SECONDS = 3
 # = slower but actually completes instead of crashing.
 RAGAS_MAX_WORKERS = 2
 
+# RAGAS's own defaults (max_retries=10, max_wait=60) are meant for
+# transient errors like rate limits, but they also apply to
+# DETERMINISTIC failures (a malformed request that will never
+# succeed) — meaning a single bad job could burn up to 10 retries x
+# 60s = 10 minutes before giving up. Tightened here since the known
+# deterministic failure (AnswerRelevancy's n>1 issue) is already fixed
+# at the source in ragas_setup.py; these lower numbers are for
+# genuinely transient issues only.
+RAGAS_MAX_RETRIES = 3
+RAGAS_MAX_WAIT_SECONDS = 30
+
+# Some retrieved chunks are large (60-120+ line classes/components), and
+# up to 6 get concatenated per question — this can exceed a judge
+# model's per-request TPM ceiling in a single call (confirmed: hit a
+# real 413 "request too large" error, 8087 tokens vs a 6000 TPM cap).
+# Truncating keeps requests reliably small regardless of exactly which
+# model/limit you're up against. Applied only at scoring time below —
+# the checkpoint file keeps full, untruncated data.
+MAX_CONTEXT_CHARS_PER_CHUNK = 1000
+
+
+def truncate_for_scoring(samples: list[SingleTurnSample]) -> list[SingleTurnSample]:
+    truncated = []
+    for s in samples:
+        contexts = [
+            c if len(c) <= MAX_CONTEXT_CHARS_PER_CHUNK
+            else c[:MAX_CONTEXT_CHARS_PER_CHUNK] + "\n... (truncated for judge LLM context limits)"
+            for c in s.retrieved_contexts
+        ]
+        truncated.append(
+            SingleTurnSample(
+                user_input=s.user_input,
+                response=s.response,
+                retrieved_contexts=contexts,
+                reference=s.reference,
+            )
+        )
+    return truncated
+
 
 def load_eval_dataset(path: str) -> list[dict]:
     return json.loads(Path(path).read_text(encoding="utf-8"))
@@ -147,13 +186,23 @@ def main():
 
     print(f"Running RAG pipeline over {len(qa_pairs)} questions...\n")
     samples = run_pipeline_over_dataset(qa_pairs, checkpoint_path, args.resume)
-    dataset = EvaluationDataset(samples=samples)
+    # Truncate here, not in run_pipeline_over_dataset/checkpoint — the
+    # checkpoint keeps full untruncated data; only the copy sent to
+    # RAGAS for scoring is size-capped, to fit judge model TPM limits.
+    scoring_samples = truncate_for_scoring(samples)
+    dataset = EvaluationDataset(samples=scoring_samples)
 
     print("\nScoring with RAGAS (faithfulness, answer_relevancy, context_precision)...")
     metrics = get_metrics()
     # max_workers=2 (not RAGAS's default of 16) — avoids bursting past
     # Groq's free-tier per-minute token cap with concurrent judge calls.
-    run_config = RunConfig(max_workers=RAGAS_MAX_WORKERS)
+    # max_retries/max_wait tightened from RAGAS's defaults (10 / 60s) —
+    # see RAGAS_MAX_RETRIES comment above.
+    run_config = RunConfig(
+        max_workers=RAGAS_MAX_WORKERS,
+        max_retries=RAGAS_MAX_RETRIES,
+        max_wait=RAGAS_MAX_WAIT_SECONDS,
+    )
     result = evaluate(dataset=dataset, metrics=metrics, run_config=run_config)
 
     df = result.to_pandas()

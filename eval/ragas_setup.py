@@ -20,10 +20,10 @@ Embeddings class, so RAGAS can use it directly.
 import sys
 from pathlib import Path
 
-from openai import AsyncOpenAI
-from ragas.llms import llm_factory
+from ragas.llms import LangchainLLMWrapper
 from ragas.embeddings import LangchainEmbeddingsWrapper
 from ragas.metrics import Faithfulness, AnswerRelevancy, LLMContextPrecisionWithReference
+from langchain_groq import ChatGroq
 from langchain_core.embeddings import Embeddings
 from chromadb.utils import embedding_functions
 
@@ -31,9 +31,21 @@ _PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(_PROJECT_ROOT / "api"))
 sys.path.insert(0, str(_PROJECT_ROOT / "indexing"))
 
-from config import GROQ_API_KEY, GROQ_MODEL  # noqa: E402  (from api/config.py)
+from config import GROQ_API_KEY  # noqa: E402  (from api/config.py)
 
-GROQ_OPENAI_COMPATIBLE_BASE_URL = "https://api.groq.com/openai/v1"
+# Deliberately NOT reusing api/config.py's GROQ_MODEL (openai/gpt-oss-120b)
+# for the judge LLM. That model's daily quota (200K tokens/day on Groq's
+# free tier) gets exhausted fast once you add RAGAS's own judge calls on
+# top of normal generation — confirmed directly from a real 429 error:
+# "tokens per day (TPD): Limit 200000, Used 197946". Waiting doesn't
+# meaningfully help since it's a DAILY cap, not a per-minute one.
+#
+# llama-3.1-8b-instant's TPM cap (6000) turned out too small for some
+# single requests here — code-heavy context can genuinely exceed 6000
+# tokens in one call, which is a hard per-request ceiling no retry can
+# fix. llama-3.3-70b-versatile has double the TPM headroom (12,000) and
+# also has its own separate, untouched daily quota.
+JUDGE_MODEL = "llama-3.3-70b-versatile"
 
 
 class ChromaONNXEmbeddings(Embeddings):
@@ -55,21 +67,34 @@ class ChromaONNXEmbeddings(Embeddings):
 
 
 def get_ragas_llm():
+    """
+    Uses LangchainLLMWrapper(ChatGroq(...)), NOT ragas's newer
+    llm_factory() — despite llm_factory being the currently-recommended
+    pattern (and LangchainLLMWrapper being flagged as deprecated).
+
+    Real, confirmed bug in ragas==0.3.9: its classic metrics
+    (Faithfulness, AnswerRelevancy, LLMContextPrecisionWithReference)
+    decide how to call the LLM using an `is_langchain_llm()` check —
+    `hasattr(llm, "agenerate") and not hasattr(llm, "run_config")`.
+    llm_factory()'s InstructorLLM has its own `agenerate` method but no
+    `run_config`, so it gets MISCLASSIFIED as a LangChain LLM, and ragas
+    then calls `.agenerate_prompt()` on it — a method InstructorLLM
+    doesn't have — crashing with
+    `AttributeError('InstructorLLM' object has no attribute
+    'agenerate_prompt')` on every single metric call.
+
+    LangchainLLMWrapper has `run_config`, so it's correctly NOT
+    misclassified, and routes to the working code path instead. If a
+    future ragas release fixes this detection bug, llm_factory would
+    be the better long-term choice — check before switching back.
+    """
     if not GROQ_API_KEY:
         raise RuntimeError(
             "GROQ_API_KEY is not set. Copy .env.example to .env in api/ "
             "and add your key (this eval harness reuses api/'s config)."
         )
-    # max_retries here is on top of run_eval.py's RunConfig(max_workers=2),
-    # which already reduces how many of these fire concurrently. Raising
-    # max_retries gives extra headroom against Groq's free-tier per-minute
-    # token cap for RAGAS's own internal judge calls.
-    client = AsyncOpenAI(
-        api_key=GROQ_API_KEY,
-        base_url=GROQ_OPENAI_COMPATIBLE_BASE_URL,
-        max_retries=5,
-    )
-    return llm_factory(GROQ_MODEL, client=client)
+    chat = ChatGroq(model=JUDGE_MODEL, groq_api_key=GROQ_API_KEY, max_tokens=2048)
+    return LangchainLLMWrapper(chat)
 
 
 def get_ragas_embeddings():
@@ -93,6 +118,13 @@ def get_metrics():
     embeddings = get_ragas_embeddings()
     return [
         Faithfulness(llm=llm),
-        AnswerRelevancy(llm=llm, embeddings=embeddings),
+        # strictness=1, not the default 3: AnswerRelevancy normally asks
+        # the LLM to generate 3 candidate questions in ONE call (n=3) to
+        # average for a more robust score. Groq's API rejects n>1
+        # outright ("'n': number must be at most 1"), so this trades a
+        # bit of score robustness for actually being able to run at all
+        # against Groq. Revisit if Groq adds n>1 support, or if you
+        # switch judge providers.
+        AnswerRelevancy(llm=llm, embeddings=embeddings, strictness=1),
         LLMContextPrecisionWithReference(llm=llm),
     ]
