@@ -25,3 +25,13 @@ class AskResponse(BaseModel):
     answer: str
     citations: list[CitationOut]
     retrieved_chunk_count: int
+
+
+class AgenticAskResponse(BaseModel):
+    question: str
+    answer: str
+    citations: list[CitationOut]
+    retrieved_chunk_count: int
+    route: str
+    sub_questions: list[str] | None = None
+    needs_clarification: bool = False

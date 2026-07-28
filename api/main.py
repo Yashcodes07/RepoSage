@@ -11,8 +11,9 @@ for the interactive Swagger UI (FastAPI generates this automatically).
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from schemas import AskRequest, AskResponse, CitationOut
+from schemas import AskRequest, AskResponse, AgenticAskResponse, CitationOut
 from rag_pipeline import answer_question
+from agent import run_agentic_query
 
 app = FastAPI(
     title="Codebase RAG API",
@@ -61,3 +62,41 @@ def ask(request: AskRequest):
         citations=citations,
         retrieved_chunk_count=result.retrieved_chunk_count,
     )
+
+
+@app.post("/ask/agentic", response_model=AgenticAskResponse)
+def ask_agentic(request: AskRequest):
+    """
+    Phase 6: routes through the LangGraph agent (router -> simple /
+    multi-hop decomposition / clarify) instead of always doing a
+    single retrieve-then-answer pass. Kept as a SEPARATE endpoint from
+    /ask (not a replacement) so both can be compared directly — same
+    pattern as RERANK_ENABLED being toggleable rather than a hard swap.
+    """
+    try:
+        result = run_agentic_query(request.question)
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
+
+    citations = [
+        CitationOut(
+            file_path=c.file_path,
+            start_line=c.start_line,
+            end_line=c.end_line,
+            name=c.name,
+        )
+        for c in result.citations
+    ]
+
+    return AgenticAskResponse(
+        question=request.question,
+        answer=result.answer,
+        citations=citations,
+        retrieved_chunk_count=result.retrieved_chunk_count,
+        route=result.route,
+        sub_questions=result.sub_questions,
+        needs_clarification=result.needs_clarification,
+    )
+

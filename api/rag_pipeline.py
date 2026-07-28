@@ -89,11 +89,14 @@ def _extract_citations(chunks: list) -> list[Citation]:
     ]
 
 
-def answer_question(question: str, top_k: int = DEFAULT_TOP_K) -> RagAnswer:
+def retrieve_chunks(question: str, top_k: int = DEFAULT_TOP_K) -> list:
     """
-    Runs the full Phase 5 loop for a single question: hybrid retrieval
-    (vector + BM25) -> RRF fusion over a wide candidate pool ->
-    cross-encoder rerank down to top_k -> context -> Groq -> cited answer.
+    Runs hybrid retrieval (vector + BM25 fusion, optional rerank) and
+    returns the raw chunk objects — no LLM call yet. Split out from
+    answer_question() so Phase 6's agent can retrieve separately per
+    sub-question during multi-hop decomposition, then synthesize once
+    across the combined results, instead of generating an intermediate
+    answer for each sub-question.
     """
     client = get_client(CHROMA_DIR)
     collection = get_collection(client)
@@ -106,10 +109,17 @@ def answer_question(question: str, top_k: int = DEFAULT_TOP_K) -> RagAnswer:
     fused = reciprocal_rank_fusion(vector_results, keyword_results, top_n=FUSION_CANDIDATE_POOL)
 
     if RERANK_ENABLED:
-        chunks = rerank(question, fused, top_n=top_k)
-    else:
-        chunks = fused[:top_k]
+        return rerank(question, fused, top_n=top_k)
+    return fused[:top_k]
 
+
+def answer_question(question: str, top_k: int = DEFAULT_TOP_K) -> RagAnswer:
+    """
+    Runs the full Phase 5 loop for a single question: hybrid retrieval
+    (vector + BM25) -> RRF fusion over a wide candidate pool ->
+    cross-encoder rerank down to top_k -> context -> Groq -> cited answer.
+    """
+    chunks = retrieve_chunks(question, top_k)
     context = build_context(chunks)
     answer_text = generate_answer(question, context)
 
