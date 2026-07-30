@@ -17,6 +17,7 @@ class CitationOut(BaseModel):
     start_line: int
     end_line: int
     name: str
+    code: str = ""
     github_url: str | None = None
 
 

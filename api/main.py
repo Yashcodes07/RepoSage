@@ -14,6 +14,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from schemas import AskRequest, AskResponse, AgenticAskResponse, CitationOut
 from rag_pipeline import answer_question
 from agent import run_agentic_query
+from config import CHROMA_DIR
+from vector_index import get_client as get_chroma_client, get_collection as get_chroma_collection
 
 app = FastAPI(
     title="Codebase RAG API",
@@ -36,6 +38,26 @@ def health():
     return {"status": "ok"}
 
 
+@app.get("/stats")
+def stats():
+    """
+    Reports the real current index size. Indexing itself still happens
+    via the CLI scripts in ingestion/ and indexing/ (Phases 1-2) — this
+    endpoint just reports what's already there, it doesn't trigger a
+    new index build. A live "index this repo" button would need a new
+    endpoint wrapping the ingestion pipeline as a background task;
+    not built yet, flagged as a natural next step in the frontend README.
+    """
+    try:
+        client = get_chroma_client(CHROMA_DIR)
+        collection = get_chroma_collection(client)
+        chunk_count = collection.count()
+    except Exception:
+        chunk_count = None
+
+    return {"chunk_count": chunk_count}
+
+
 @app.post("/ask", response_model=AskResponse)
 def ask(request: AskRequest):
     try:
@@ -52,6 +74,7 @@ def ask(request: AskRequest):
             start_line=c.start_line,
             end_line=c.end_line,
             name=c.name,
+            code=c.code,
         )
         for c in result.citations
     ]
@@ -86,6 +109,7 @@ def ask_agentic(request: AskRequest):
             start_line=c.start_line,
             end_line=c.end_line,
             name=c.name,
+            code=c.code,
         )
         for c in result.citations
     ]
@@ -99,4 +123,3 @@ def ask_agentic(request: AskRequest):
         sub_questions=result.sub_questions,
         needs_clarification=result.needs_clarification,
     )
-
