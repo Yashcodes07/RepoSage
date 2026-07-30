@@ -1,5 +1,5 @@
-[
-  {
+{
+  "Where is authentication handled in the backend?": {
     "user_input": "Where is authentication handled in the backend?",
     "retrieved_contexts": [
       "frontend/src/pages/Login.jsx:15-33 [handleSubmit]\nhandleSubmit\nasync function handleSubmit(e) {\n    e.preventDefault()\n    setLoading(true); setError('')\n    try {\n      const params = new URLSearchParams()\n      params.append('username', form.email)\n      params.append('password', form.password)\n      const { data } = await api.post('/auth/login', params, {\n        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }\n      })\n      const me = await api.get('/auth/me', {\n        headers: { Authorization: `Bearer ${data.access_token}` }\n      })\n      setAuth(data.access_token, me.d\n... (truncated for judge LLM context limits)",
@@ -12,7 +12,7 @@
     "answer_relevancy": 0.0,
     "llm_context_precision_with_reference": 0.0
   },
-  {
+  "How does the frontend know if a user is logged in?": {
     "user_input": "How does the frontend know if a user is logged in?",
     "retrieved_contexts": [
       "frontend/src/store/authStore.js:9-9 [setAuth]\nsetAuth\n(token, user) => set({ token, user })",
@@ -25,7 +25,7 @@
     "answer_relevancy": 0.9837562441825867,
     "llm_context_precision_with_reference": 0.9999999999666667
   },
-  {
+  "What happens when the NL-to-SQL agent fails to answer a question?": {
     "user_input": "What happens when the NL-to-SQL agent fails to answer a question?",
     "retrieved_contexts": [
       "app/ai/sql_agent.py:50-74 [run_nl_query]\nrun_nl_query\ndef run_nl_query(agent, question: str) -> dict:\n    try:\n        response = agent.invoke({\"input\": question})\n        answer = response.get(\"output\", \"\")\n        # If agent hit limit, try direct SQL approach\n        if \"iteration limit\" in answer.lower() or \"time limit\" in answer.lower():\n            return {\n                \"success\": False,\n                \"question\": question,\n                \"answer\": None,\n                \"error\": \"Agent hit iteration limit \u2014 try a simpler question\",\n            }\n        return {\n            \"success\"\n... (truncated for judge LLM context limits)",
@@ -38,7 +38,7 @@
     "answer_relevancy": 0.7954539060592651,
     "llm_context_precision_with_reference": 0.9999999999
   },
-  {
+  "How does the app retrieve relevant schema context before generating SQL?": {
     "user_input": "How does the app retrieve relevant schema context before generating SQL?",
     "retrieved_contexts": [
       "app/ai/hybrid_search.py:33-59 [_get_relevant_context]\n_get_relevant_context\ndef _get_relevant_context(collection_name: str, question: str) -> str:\n    \"\"\"\n    Searches the knowledge base for schema context relevant to the question.\n    Returns a formatted string to inject into the AI prompt.\n\n    Example:\n    Question: \"how many active users signed up last month?\"\n    Returns:\n    \"Relevant schema context:\n     - Table users has columns: id, email, is_active, created_at\n     - Column is_active in table users has type BOOLEAN. This field is required.\n     - Column created_at in table users has \n... (truncated for judge LLM context limits)",
@@ -51,7 +51,7 @@
     "answer_relevancy": 0.5799049139022827,
     "llm_context_precision_with_reference": 0.99999999995
   },
-  {
+  "How does the app explain a failed SQL query to the user in plain language?": {
     "user_input": "How does the app explain a failed SQL query to the user in plain language?",
     "retrieved_contexts": [
       "app/ai/error_explainer.py:7-19 [explain_sql_error]\nexplain_sql_error\ndef explain_sql_error(original_question, failed_sql, error_message, schema_context=\"\") -> dict:\n    llm = ChatGroq(model=settings.GROQ_MODEL, temperature=0, groq_api_key=settings.GROQ_API_KEY)\n    system = \"\"\"You are a database expert. Explain the SQL error simply, provide corrected SQL, and give a tip.\nRespond ONLY in this JSON format: {\"explanation\": \"...\", \"fix\": \"...\", \"tip\": \"...\"}\"\"\"\n    user = f\"Question: {original_question}\\nFailed SQL: {failed_sql}\\nError: {error_message}\\nSchema: {schema_context}\"\n    try:\n        r\n... (truncated for judge LLM context limits)",
@@ -64,7 +64,7 @@
     "answer_relevancy": NaN,
     "llm_context_precision_with_reference": NaN
   },
-  {
+  "What's the difference between running a direct SQL query and asking a natural language question?": {
     "user_input": "What's the difference between running a direct SQL query and asking a natural language question?",
     "retrieved_contexts": [
       "app/api/routes/query.py:32-43 [ask_question]\nask_question\nasync def ask_question(\n    payload: NLQueryRequest,\n    db: AsyncSession = Depends(get_db),\n    current_user: User = Depends(get_current_user),\n):\n    \"\"\"Ask a plain English question \u2014 AI converts to SQL and returns answer.\"\"\"\n    if not payload.question.strip():\n        raise HTTPException(status_code=400, detail=\"Question cannot be empty\")\n    return await run_natural_language_query(\n        db=db, connection_id=payload.connection_id,\n        user_id=current_user.id, question=payload.question,\n    )",
@@ -77,7 +77,7 @@
     "answer_relevancy": NaN,
     "llm_context_precision_with_reference": NaN
   },
-  {
+  "How does the backend retrieve a user's saved database connections?": {
     "user_input": "How does the backend retrieve a user's saved database connections?",
     "retrieved_contexts": [
       "app/db/crud/connection.py:12-19 [get_connections]\nget_connections\nasync def get_connections(db: AsyncSession, user_id: int) -> list[DatabaseConnection]:\n    result = await db.execute(\n        select(DatabaseConnection).where(\n            DatabaseConnection.owner_id == user_id,\n            DatabaseConnection.is_active == True,\n        )\n    )\n    return result.scalars().all()",
@@ -90,7 +90,7 @@
     "answer_relevancy": NaN,
     "llm_context_precision_with_reference": NaN
   },
-  {
+  "How does logout work?": {
     "user_input": "How does logout work?",
     "retrieved_contexts": [
       "frontend/src/store/authStore.js:10-10 [logout]\nlogout\n() => set({ token: null, user: null })",
@@ -103,4 +103,4 @@
     "answer_relevancy": NaN,
     "llm_context_precision_with_reference": NaN
   }
-]
+}
