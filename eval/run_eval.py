@@ -27,6 +27,7 @@ of re-spending API quota re-answering questions you already have.
 
 import argparse
 import json
+import math
 import sys
 import time
 from pathlib import Path
@@ -261,7 +262,7 @@ def main():
 
     print("\n=== Aggregate scores ===")
     for col in metric_cols:
-        vals = [rec[col] for rec in all_records if rec.get(col) is not None]
+        vals = [rec[col] for rec in all_records if rec.get(col) is not None and not math.isnan(rec[col])]
         avg = sum(vals) / len(vals) if vals else float("nan")
         print(f"  {col}: {avg:.3f}  (n={len(vals)}/{len(all_records)})")
 

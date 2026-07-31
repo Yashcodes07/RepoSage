@@ -15,6 +15,7 @@ time we can compare/combine results from each retriever fairly.
 import argparse
 import json
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 from vector_index import get_client, get_collection, index_chunks, reset_collection
@@ -56,6 +57,30 @@ def main():
           f"({len(kw_index.entries)} entries, saved to {args.bm25_path})")
 
     print("\n[build_index] Done. Run query_index.py to test retrieval.")
+
+    # Carries the repo URL from Phase 1's ingest.py (if present) into
+    # a metadata file alongside the index itself, so /stats can report
+    # which repo was ACTUALLY indexed — separate from whatever a user
+    # might type into the frontend's citation-link field, which
+    # doesn't trigger indexing on its own.
+    repo_metadata_path = Path(args.chunks).parent / "repo_metadata.json"
+    repo_url = None
+    if repo_metadata_path.exists():
+        try:
+            repo_url = json.loads(repo_metadata_path.read_text(encoding="utf-8")).get("repo_url")
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    index_metadata_path = Path(args.chroma_dir).parent / "index_metadata.json"
+    index_metadata_path.write_text(
+        json.dumps({
+            "repo_url": repo_url,
+            "chunk_count": len(chunks),
+            "indexed_at": datetime.now(timezone.utc).isoformat(),
+        }, indent=2),
+        encoding="utf-8",
+    )
+    print(f"[build_index] Saved index metadata to {index_metadata_path.resolve()}")
 
 
 if __name__ == "__main__":

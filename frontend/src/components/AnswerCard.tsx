@@ -30,13 +30,13 @@ export default function AnswerCard({
   const cleanedAnswer = stripRedundantBracketCitations(response.answer);
 
   return (
-    <div className="rounded-lg border border-border bg-surface p-4">
+    <div>
       <div className="prose-answer text-[0.95rem] leading-relaxed text-ink">
         <ReactMarkdown remarkPlugins={[remarkGfm]}>{cleanedAnswer}</ReactMarkdown>
       </div>
 
       {response.citations.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-1.5">
+        <div className="mt-3 flex flex-wrap gap-1.5 border-t border-border/60 pt-3">
           {response.citations.map((c, i) => (
             <CitationChip key={`${c.file_path}:${c.start_line}-${i}`} citation={c} repoUrl={repoUrl} />
           ))}

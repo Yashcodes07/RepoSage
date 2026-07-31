@@ -8,6 +8,9 @@ Then either hit POST /ask directly, or open http://localhost:8000/docs
 for the interactive Swagger UI (FastAPI generates this automatically).
 """
 
+import json
+from pathlib import Path
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -41,12 +44,13 @@ def health():
 @app.get("/stats")
 def stats():
     """
-    Reports the real current index size. Indexing itself still happens
-    via the CLI scripts in ingestion/ and indexing/ (Phases 1-2) — this
-    endpoint just reports what's already there, it doesn't trigger a
-    new index build. A live "index this repo" button would need a new
-    endpoint wrapping the ingestion pipeline as a background task;
-    not built yet, flagged as a natural next step in the frontend README.
+    Reports the real current index size AND which repo was actually
+    indexed (from indexing/index_metadata.json, written by
+    indexing/build_index.py) — separate from whatever URL a user has
+    typed into the frontend's citation-link field, which does NOT
+    trigger indexing on its own. This lets the UI be honest when those
+    two disagree, instead of silently answering about a different repo
+    than the one the person typed.
     """
     try:
         client = get_chroma_client(CHROMA_DIR)
@@ -55,7 +59,22 @@ def stats():
     except Exception:
         chunk_count = None
 
-    return {"chunk_count": chunk_count}
+    indexed_repo_url = None
+    indexed_at = None
+    metadata_path = Path(CHROMA_DIR).parent / "index_metadata.json"
+    if metadata_path.exists():
+        try:
+            meta = json.loads(metadata_path.read_text(encoding="utf-8"))
+            indexed_repo_url = meta.get("repo_url")
+            indexed_at = meta.get("indexed_at")
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    return {
+        "chunk_count": chunk_count,
+        "indexed_repo_url": indexed_repo_url,
+        "indexed_at": indexed_at,
+    }
 
 
 @app.post("/ask", response_model=AskResponse)

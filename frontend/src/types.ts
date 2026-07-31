@@ -40,6 +40,6 @@ export interface ChatMessage {
 
 export interface IndexStats {
   chunkCount: number | null;
+  indexedRepoUrl: string | null;
   indexedAt: string | null;
-  repoUrl: string | null;
 }

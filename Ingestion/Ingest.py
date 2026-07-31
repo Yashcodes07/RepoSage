@@ -13,6 +13,7 @@ LLM/embedding is involved.
 import argparse
 import json
 import shutil
+from datetime import datetime, timezone
 from pathlib import Path
 
 from repo_loader import clone_repo, walk_repo
@@ -71,6 +72,21 @@ def main():
         encoding="utf-8",
     )
     print(f"\n[ingest] Saved {len(chunks)} chunks to {out_path.resolve()}")
+
+    # Save which repo this actually was, so later stages (indexing,
+    # the /stats API, the frontend sidebar) can report the REAL
+    # indexed repo — not whatever URL a user happens to type into a
+    # UI field, which doesn't trigger re-indexing on its own.
+    metadata_path = out_path.parent / "repo_metadata.json"
+    metadata_path.write_text(
+        json.dumps({
+            "repo_url": args.repo_url,
+            "ingested_at": datetime.now(timezone.utc).isoformat(),
+            "chunk_count": len(chunks),
+        }, indent=2),
+        encoding="utf-8",
+    )
+    print(f"[ingest] Saved repo metadata to {metadata_path.resolve()}")
 
 
 if __name__ == "__main__":
