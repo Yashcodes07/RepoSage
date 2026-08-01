@@ -57,11 +57,24 @@ class RagAnswer:
     retrieved_chunk_count: int
 
 
+# Some codebases have large individual chunks (80-120+ line classes/
+# components) — concatenating several of these uncapped can exceed a
+# model's per-request token ceiling in one shot (confirmed live: a
+# real 413 "Request too large" against openai/gpt-oss-120b's 8000 TPM
+# cap on a repo with bigger-than-QueDB chunks). A 413 like that is
+# deterministic — no retry fixes it — so this caps size at build time
+# instead, keeping the pipeline robust across whatever repo is indexed,
+# not just the one it happened to be tested against.
+MAX_CHUNK_CHARS_FOR_CONTEXT = 2500
+MAX_TOTAL_CONTEXT_CHARS = 15000  # ~5000 tokens, safety margin under the tightest observed cap
+
+
 def build_context(chunks: list) -> str:
     """
     Formats retrieved (fused) chunks into a single string the LLM can
     read, with each chunk clearly labeled with its citation so the
     model can copy the exact (file:line) format into its answer.
+    Truncates oversized chunks/total context — see constants above.
     """
     if not chunks:
         return "(no relevant code found)"
@@ -70,10 +83,19 @@ def build_context(chunks: list) -> str:
     for c in chunks:
         label = f"{c.file_path}:{c.start_line}-{c.end_line}"
         name = c.name or "unnamed"
+        code = c.code
+        if len(code) > MAX_CHUNK_CHARS_FOR_CONTEXT:
+            code = code[:MAX_CHUNK_CHARS_FOR_CONTEXT] + "\n... (truncated, chunk was larger than usual)"
         parts.append(
-            f"--- Chunk ({label}) — {name} ---\n{c.code}"
+            f"--- Chunk ({label}) — {name} ---\n{code}"
         )
-    return "\n\n".join(parts)
+
+    context = "\n\n".join(parts)
+    if len(context) > MAX_TOTAL_CONTEXT_CHARS:
+        # Final safety net in case per-chunk capping still isn't
+        # enough (e.g. top_k configured higher than usual elsewhere).
+        context = context[:MAX_TOTAL_CONTEXT_CHARS] + "\n... (additional retrieved context omitted to fit request size limits)"
+    return context
 
 
 def _extract_citations(chunks: list) -> list[Citation]:
