@@ -2,12 +2,6 @@ import { useState } from 'react';
 import type { Citation } from '../types';
 import { githubFileUrl } from '../api/client';
 
-/**
- * A citation isn't just a label here — clicking it peeks the actual
- * retrieved code inline (like an editor's "peek definition"), since
- * the whole point of this tool is proving an answer is grounded in
- * real code, not just naming a file and asking you to trust it.
- */
 export default function CitationChip({ citation, repoUrl }: { citation: Citation; repoUrl: string | null }) {
   const [open, setOpen] = useState(false);
   const label = `${citation.file_path}:${citation.start_line}-${citation.end_line}`;

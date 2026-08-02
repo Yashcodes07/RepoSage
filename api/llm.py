@@ -8,7 +8,7 @@ import time
 
 from groq import Groq, RateLimitError
 
-from config import GROQ_API_KEY, GROQ_MODEL
+from .config import GROQ_API_KEY, GROQ_MODEL
 
 SYSTEM_PROMPT = """You are a code assistant answering questions about a specific \
 codebase. You will be given retrieved code chunks, each labeled with its exact \
@@ -17,12 +17,8 @@ file path and line range.
 Rules:
 - Answer ONLY using the provided code chunks. Do not invent code, functions, \
 or behavior that isn't shown.
-- Every factual claim about the code MUST be followed by a citation in EXACTLY \
-this format: (file_path:start_line-end_line) — plain parentheses, nothing else.
-  Correct example:  Auth is handled in login() (app/api/routes/auth.py:20-27).
-  Do NOT use any other citation style — no 【】 brackets, no footnote markers, \
-no numbered references, no [1]-style citations. Only the exact parenthesized \
-format shown above.
+- Every factual claim about the code MUST be followed by a citation in the \
+exact format (file_path:start_line-end_line).
 - If the provided chunks don't contain enough information to answer, say so \
 plainly instead of guessing.
 - Be concise and technical — the reader is a developer, not a beginner.

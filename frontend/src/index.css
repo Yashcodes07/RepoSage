@@ -1,17 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
-/*
-  Design language: a git-blame / code-review visual vocabulary, not a
-  generic dark chat template. This tool's entire job is proving WHERE
-  an answer came from — so the palette borrows from diff/blame UI
-  (line-level provenance) rather than a neutral SaaS dark mode.
-
-  bg / surface: deep blue-black (not pure neutral black — closer to an
-  editor's dark theme than a generic dashboard)
-  accent-retrieval (teal): what the hybrid search pipeline found
-  accent-citation (gold): a specific cited file:line reference
-*/
 @theme {
   --color-bg: #0F1419;
   --color-surface: #161B22;

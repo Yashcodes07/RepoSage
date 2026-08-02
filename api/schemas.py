@@ -4,8 +4,7 @@ Request/response schemas for the FastAPI endpoints.
 
 from pydantic import BaseModel, Field
 
-from config import DEFAULT_TOP_K
-
+from .config import DEFAULT_TOP_K
 
 class AskRequest(BaseModel):
     question: str = Field(..., min_length=1, description="Natural language question about the codebase")
@@ -36,3 +35,13 @@ class AgenticAskResponse(BaseModel):
     route: str
     sub_questions: list[str] | None = None
     needs_clarification: bool = False
+
+
+class IndexRequest(BaseModel):
+    repo_url: str = Field(..., min_length=1, description="GitHub repo URL to clone and index")
+
+
+class IndexResponse(BaseModel):
+    repo_url: str
+    chunk_count: int
+    indexed_at: str

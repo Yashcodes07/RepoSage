@@ -1,8 +1,3 @@
-// Mirrors api/schemas.py — kept in sync manually since this is a
-// small project without a shared schema generator. If you add fields
-// to CitationOut/AskResponse/AgenticAskResponse in the backend,
-// update these too.
-
 export interface Citation {
   file_path: string;
   start_line: number;
@@ -27,8 +22,6 @@ export interface AgenticAskResponse extends AskResponse {
   needs_clarification: boolean;
 }
 
-// One entry in the chat thread. `mode` records which endpoint answered
-// it, since a user can toggle agentic mode mid-conversation.
 export interface ChatMessage {
   id: string;
   question: string;

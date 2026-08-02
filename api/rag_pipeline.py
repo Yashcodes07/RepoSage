@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 from dataclasses import dataclass
 
-from config import (
+from .config import (
     CHROMA_DIR,
     BM25_PATH,
     INDEXING_DIR,
@@ -32,7 +32,7 @@ sys.path.insert(0, INDEXING_DIR)
 from vector_index import get_client, get_collection, query_vector  # noqa: E402
 from keyword_index import KeywordIndex  # noqa: E402
 from fusion import reciprocal_rank_fusion  # noqa: E402
-from llm import generate_answer  # noqa: E402
+from .llm import generate_answer  # noqa: E402
 
 if RERANK_ENABLED:
     from reranker import rerank  # noqa: E402

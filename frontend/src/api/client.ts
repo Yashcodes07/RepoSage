@@ -1,8 +1,5 @@
 import type { AskResponse, AgenticAskResponse } from '../types';
 
-// In dev, Vite proxies /api/* to http://localhost:8000 (see
-// vite.config.ts). In production, set VITE_API_BASE_URL to your
-// deployed backend's URL (e.g. your Railway/Render app).
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api';
 
 class ApiError extends Error {
@@ -43,10 +40,42 @@ export function askAgentic(question: string): Promise<AgenticAskResponse> {
   return postJson<AgenticAskResponse>('/ask/agentic', { question });
 }
 
+export interface IndexResult {
+  repo_url: string;
+  chunk_count: number;
+  indexed_at: string;
+}
+
+export async function indexRepo(repoUrl: string): Promise<IndexResult> {
+  // Indexing can genuinely take longer than a typical request for a
+  // large repo — 2 minutes is generous headroom beyond the few
+  // seconds typical repos have taken in testing.
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 120_000);
+  try {
+    const res = await fetch(`${API_BASE}/index`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ repo_url: repoUrl }),
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      let detail = res.statusText;
+      try {
+        const errBody = await res.json();
+        detail = errBody.detail ?? detail;
+      } catch {
+        // not JSON — fall back to statusText
+      }
+      throw new ApiError(detail, res.status);
+    }
+    return res.json() as Promise<IndexResult>;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export function githubFileUrl(repoUrl: string, filePath: string, startLine: number, endLine: number): string {
-  // Normalizes a repo URL (with or without .git) into a GitHub
-  // blob link with a line range, so citation chips link straight to
-  // the exact code instead of just naming it.
   const cleaned = repoUrl.replace(/\.git$/, '').replace(/\/$/, '');
   return `${cleaned}/blob/main/${filePath}#L${startLine}-L${endLine}`;
 }

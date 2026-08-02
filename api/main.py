@@ -1,33 +1,44 @@
 """
-Phase 3 FastAPI app.
+Phase 3-6+ FastAPI app.
 
 Run:
     uvicorn main:app --reload
 
-Then either hit POST /ask directly, or open http://localhost:8000/docs
-for the interactive Swagger UI (FastAPI generates this automatically).
+Endpoints:
+    GET  /health
+    GET  /stats          - real index size + which repo is actually indexed
+    POST /ask            - direct RAG pipeline (Phase 3-5)
+    POST /ask/agentic     - LangGraph agent: router + multi-hop (Phase 6)
+    POST /index           - clone + index a repo live (Phase 8 addition)
 """
 
 import json
 from pathlib import Path
-
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from .schemas import (
+    AskRequest,
+    AskResponse,
+    AgenticAskResponse,
+    CitationOut,
+    IndexRequest,
+    IndexResponse,
+)
 
-from schemas import AskRequest, AskResponse, AgenticAskResponse, CitationOut
-from rag_pipeline import answer_question
-from agent import run_agentic_query
-from config import CHROMA_DIR
-from vector_index import get_client as get_chroma_client, get_collection as get_chroma_collection
-
+from .rag_pipeline import answer_question
+from .agent import run_agentic_query
+from .indexing_service import index_repo, IndexingError
+from .config import CHROMA_DIR, BM25_PATH
+from indexing.vector_index import (
+    get_client as get_chroma_client,
+    get_collection as get_chroma_collection,
+)
 app = FastAPI(
     title="Codebase RAG API",
     description="Ask natural-language questions about an indexed codebase and get cited answers.",
-    version="0.1.0",  # Phase 3: basic RAG, vector search only
+    version="0.6.0",
 )
 
-# Wide-open CORS for local development (Phase 8's frontend will hit this
-# from a different port). Tighten this before deploying publicly.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -45,12 +56,9 @@ def health():
 def stats():
     """
     Reports the real current index size AND which repo was actually
-    indexed (from indexing/index_metadata.json, written by
-    indexing/build_index.py) — separate from whatever URL a user has
-    typed into the frontend's citation-link field, which does NOT
-    trigger indexing on its own. This lets the UI be honest when those
-    two disagree, instead of silently answering about a different repo
-    than the one the person typed.
+    indexed (from indexing/index_metadata.json) — separate from
+    whatever URL a user has typed into the frontend's citation-link
+    field, which does NOT by itself change what's indexed.
     """
     try:
         client = get_chroma_client(CHROMA_DIR)
@@ -77,17 +85,8 @@ def stats():
     }
 
 
-@app.post("/ask", response_model=AskResponse)
-def ask(request: AskRequest):
-    try:
-        result = answer_question(request.question, top_k=request.top_k)
-    except RuntimeError as e:
-        # e.g. missing GROQ_API_KEY
-        raise HTTPException(status_code=500, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
-
-    citations = [
+def _citations_out(citations) -> list[CitationOut]:
+    return [
         CitationOut(
             file_path=c.file_path,
             start_line=c.start_line,
@@ -95,13 +94,23 @@ def ask(request: AskRequest):
             name=c.name,
             code=c.code,
         )
-        for c in result.citations
+        for c in citations
     ]
+
+
+@app.post("/ask", response_model=AskResponse)
+def ask(request: AskRequest):
+    try:
+        result = answer_question(request.question, top_k=request.top_k)
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
 
     return AskResponse(
         question=request.question,
         answer=result.answer,
-        citations=citations,
+        citations=_citations_out(result.citations),
         retrieved_chunk_count=result.retrieved_chunk_count,
     )
 
@@ -109,11 +118,10 @@ def ask(request: AskRequest):
 @app.post("/ask/agentic", response_model=AgenticAskResponse)
 def ask_agentic(request: AskRequest):
     """
-    Phase 6: routes through the LangGraph agent (router -> simple /
-    multi-hop decomposition / clarify) instead of always doing a
-    single retrieve-then-answer pass. Kept as a SEPARATE endpoint from
-    /ask (not a replacement) so both can be compared directly — same
-    pattern as RERANK_ENABLED being toggleable rather than a hard swap.
+    Routes through the LangGraph agent (router -> simple / multi-hop
+    decomposition / clarify) instead of always doing a single
+    retrieve-then-answer pass. Kept as a separate endpoint from /ask
+    so both can be compared directly.
     """
     try:
         result = run_agentic_query(request.question)
@@ -122,23 +130,33 @@ def ask_agentic(request: AskRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Unexpected error: {e}")
 
-    citations = [
-        CitationOut(
-            file_path=c.file_path,
-            start_line=c.start_line,
-            end_line=c.end_line,
-            name=c.name,
-            code=c.code,
-        )
-        for c in result.citations
-    ]
-
     return AgenticAskResponse(
         question=request.question,
         answer=result.answer,
-        citations=citations,
+        citations=_citations_out(result.citations),
         retrieved_chunk_count=result.retrieved_chunk_count,
         route=result.route,
         sub_questions=result.sub_questions,
         needs_clarification=result.needs_clarification,
     )
+
+
+@app.post("/index", response_model=IndexResponse)
+def index(request: IndexRequest):
+    """
+    Clones and indexes a repo live, replacing whatever was previously
+    indexed. Defined as a plain sync function (not async def) —
+    FastAPI/Starlette automatically runs sync route handlers in a
+    thread pool, so a slow clone+index doesn't block other concurrent
+    requests like /ask. Response simply takes as long as indexing does
+    (a few seconds for a typical repo, based on real testing — large
+    repos will take longer).
+    """
+    try:
+        result = index_repo(request.repo_url, CHROMA_DIR, BM25_PATH)
+    except IndexingError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Unexpected error while indexing: {e}")
+
+    return IndexResponse(**result)

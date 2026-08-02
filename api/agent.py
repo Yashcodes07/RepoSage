@@ -24,9 +24,9 @@ from typing import TypedDict
 
 from langgraph.graph import StateGraph, START, END
 
-from config import GROQ_MODEL
-from llm import get_client, generate_answer
-from rag_pipeline import retrieve_chunks, build_context, Citation, RagAnswer
+from .config import GROQ_MODEL
+from .llm import get_client, generate_answer
+from .rag_pipeline import retrieve_chunks, build_context, Citation, RagAnswer
 
 ROUTES = ("simple", "multi_hop", "clarify")
 
