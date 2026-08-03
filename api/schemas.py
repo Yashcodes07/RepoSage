@@ -4,7 +4,7 @@ Request/response schemas for the FastAPI endpoints.
 
 from pydantic import BaseModel, Field
 
-from .config import DEFAULT_TOP_K
+from config import DEFAULT_TOP_K
 
 class AskRequest(BaseModel):
     question: str = Field(..., min_length=1, description="Natural language question about the codebase")

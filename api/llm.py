@@ -8,7 +8,7 @@ import time
 
 from groq import Groq, RateLimitError
 
-from .config import GROQ_API_KEY, GROQ_MODEL
+from config import GROQ_API_KEY, GROQ_MODEL
 
 SYSTEM_PROMPT = """You are a code assistant answering questions about a specific \
 codebase. You will be given retrieved code chunks, each labeled with its exact \
