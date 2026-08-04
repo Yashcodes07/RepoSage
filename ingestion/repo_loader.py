@@ -10,13 +10,15 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import git  # GitPython
-from ingestion.config import (
+
+from config import (
     IGNORED_DIRS,
     IGNORED_EXTENSIONS,
     IGNORED_FILENAMES,
     MAX_FILE_SIZE_BYTES,
     EXTENSION_TO_LANGUAGE,
 )
+
 
 @dataclass
 class SourceFile:
