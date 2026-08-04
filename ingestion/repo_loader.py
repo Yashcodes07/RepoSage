@@ -1,7 +1,4 @@
-"""
-Step 1 of the pipeline: clone a GitHub repo (shallow) and walk its
-file tree, yielding only files worth parsing.
-"""
+
 
 import os
 import shutil
@@ -11,7 +8,7 @@ from pathlib import Path
 
 import git  # GitPython
 
-from config import (
+from ingestion_config import (
     IGNORED_DIRS,
     IGNORED_EXTENSIONS,
     IGNORED_FILENAMES,
@@ -28,10 +25,7 @@ class SourceFile:
 
 
 def clone_repo(repo_url: str, dest_dir: str | None = None) -> Path:
-    """
-    Shallow-clones a GitHub repo and returns the local path.
-    If dest_dir is None, clones into a fresh temp directory.
-    """
+  
     if dest_dir is None:
         dest_dir = tempfile.mkdtemp(prefix="codebase_rag_")
     else:
@@ -58,10 +52,7 @@ def _is_ignored_file(path: Path) -> bool:
 
 
 def walk_repo(repo_root: Path) -> list[SourceFile]:
-    """
-    Walks the repo tree, skipping ignored dirs, and returns every
-    source file we know how to parse (i.e. has a supported extension).
-    """
+   
     source_files: list[SourceFile] = []
 
     for dirpath, dirnames, filenames in os.walk(repo_root):
