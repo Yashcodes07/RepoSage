@@ -29,7 +29,7 @@ from rag_pipeline import answer_question
 from agent import run_agentic_query
 from indexing_service import index_repo, IndexingError
 from config import CHROMA_DIR, BM25_PATH
-from indexing.vector_index import (
+from vector_index import (
     get_client as get_chroma_client,
     get_collection as get_chroma_collection,
 )
